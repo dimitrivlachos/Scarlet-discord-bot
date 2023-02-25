@@ -19,7 +19,10 @@ def get_weather(city):
     # Get weather from API
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}'
     response = requests.get(url)
-    response.raise_for_status()
+    
+    # Check if city was found
+    if response.status_code == 404:
+        return "I couldn't find that city! :sob:"
 
     # Convert response to JSON
     weather_data = response.json()
