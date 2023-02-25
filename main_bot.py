@@ -54,31 +54,29 @@ async def on_ready():
 # Responds to messages with "Hello, World!"
 @client.event
 async def on_message(message):
-    print("Message received: " + message.content)
-
     # Ignore messages sent by the bot itself
     if message.author == client.user:
         return
     
-    response = 'Hello, World!'
+    # Print message to console
+    print("Message received: " + message.content)
     
     # If message has weather command, respond with weather
     if message.content.startswith('weather'):
-        # Get the city name from the message
-        city = message.content.split(' ')[1]
-        # If there is no city name, return
-        if not city:
+        message_contents = message.content.split(' ')
+
+        if len(message_contents) < 2:
             response = "I don't know what city you want the weather for!"
 
         else:
+            # Get the city name from the message
+            city = message_contents[1]
             # Get the weather from the API
             weather = get_weather(city)
             # Send the weather to the Discord channel
-            await message.channel.send(weather)
-            return
-
-    # Send the response to the Discord channel
-    await message.channel.send(response)
+            response = weather
+        
+        await message.channel.send(response)
 
 # Run the bot
 client.run(token)
