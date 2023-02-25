@@ -1,10 +1,13 @@
 import discord
 import requests
-from discord.ext import commands
+from pytube import YouTube
 
 intents = discord.Intents.all()
 intents.members = True
 client = discord.Client(intents=intents)
+
+# Define the voice client
+voice = None
 
 # Reads token from binary file
 with open("config/token.bin", "rb") as binary_file:
@@ -65,6 +68,7 @@ async def on_message(message):
         print("Message received: " + message.content)
         
         # If message has weather command, respond with weather
+        # Example: weather london
         if message.content.startswith('weather'):
             message_contents = message.content.split(' ')
 
@@ -81,5 +85,69 @@ async def on_message(message):
             
             await message.channel.send(response)
 
-# Run the bot
-client.run(token)
+        # If message has play command, play the song
+        # Example: play https://www.youtube.com/watch?v=dQw4w9WgXcQ
+        if message.content.startswith('play '):
+            # Get the URL from the message
+            url = message.content[5:]
+
+            # Check if the user is in a voice channel
+            if not message.author.voice:
+                await message.channel.send("You need to be in a voice channel to use this command!")
+                return
+
+            # Create and play the MusicPlayer
+            async with message.channel.typing():
+                try:
+                    yt = YouTube(url)
+                    video_url = yt.streams.filter(only_audio=True).first().url
+                    player = MusicPlayer(video_url)
+                    await player.play(message)
+                except Exception as e:
+                    await message.channel.send(f"An error occurred: {str(e)}")
+                    return
+
+        # If message has stop command, stop the song
+        # Example: stop
+        elif message.content.startswith('stop'):
+            try:
+                await player.stop()
+            except Exception as e:
+                await message.channel.send(f"An error occurred: {str(e)}")
+
+# Define the audio player
+class MusicPlayer:
+    def __init__(self, url):
+        self.url = url
+        self.is_playing = False
+        self.voice = None
+        self.player = None
+        self.title = None
+
+    async def play(self, ctx):
+        if not self.is_playing:
+            self.is_playing = True
+            self.voice = await ctx.author.voice.channel.connect()
+            self.player = self.voice.play(discord.FFmpegPCMAudio(self.url), after=self.on_music_end)
+            await self.show_now_playing(ctx)
+
+    async def on_music_end(self, error=None):
+        self.is_playing = False
+        if error:
+            print(f'Player error: {error}')
+        await self.voice.disconnect()
+
+    async def show_now_playing(self, ctx):
+        yt = YouTube(self.url)
+        self.title = yt.title
+        await ctx.send(f'Now playing: {self.title}')
+
+    async def stop(self):
+        if self.is_playing:
+            self.player.stop()
+            await self.voice.disconnect()
+            self.is_playing = False
+
+if __name__ == "__main__":
+    # Run the bot
+    client.run(token)
