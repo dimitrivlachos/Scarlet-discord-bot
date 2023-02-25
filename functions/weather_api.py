@@ -29,7 +29,7 @@ def get_weather(city):
     wind_kmh = round(wind * 3.6)
 
     # Format weather message
-    weather = f'{city.title()} Weather: {weather_desc}, {temp_celsius}°C, {wind_kmh} km/h'
+    weather = f'{city.title()} Weather: {weather_desc}, {temp_celsius}°C, with winds of {wind_kmh} km/h'
 
     print(weather)
 
