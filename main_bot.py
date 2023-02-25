@@ -1,12 +1,8 @@
-'''
-Basic discord bot that responds to messages with "Hello, World!"
-'''
-
 import discord
 import requests
 from discord.ext import commands
 
-intents = discord.Intents.all()#discord.Intents.default()
+intents = discord.Intents.all()
 intents.members = True
 client = discord.Client(intents=intents)
 
@@ -51,32 +47,36 @@ def get_weather(city):
 async def on_ready():
     print(f'{client.user} has connected to Discord!')
 
-# Responds to messages with "Hello, World!"
+# Responds to messages with "Hello, World!" when mentioned
 @client.event
 async def on_message(message):
     # Ignore messages sent by the bot itself
     if message.author == client.user:
         return
     
-    # Print message to console
-    print("Message received: " + message.content)
-    
-    # If message has weather command, respond with weather
-    if message.content.startswith('weather'):
-        message_contents = message.content.split(' ')
-
-        if len(message_contents) < 2:
-            response = "I don't know what city you want the weather for!"
-
-        else:
-            # Get the city name from the message
-            city = message_contents[1]
-            # Get the weather from the API
-            weather = get_weather(city)
-            # Send the weather to the Discord channel
-            response = weather
+    # Check if the bot is mentioned in the message
+    if client.user in message.mentions:
+        await message.channel.send("Hi! I'm a bot! I can only tell the weather for now. Try typing 'weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
+    else:
+        # Print message to console
+        print("Message received: " + message.content)
         
-        await message.channel.send(response)
+        # If message has weather command, respond with weather
+        if message.content.startswith('weather'):
+            message_contents = message.content.split(' ')
+
+            if len(message_contents) < 2:
+                response = "I don't know what city you want the weather for!"
+
+            else:
+                # Get the city name from the message
+                city = message_contents[1]
+                # Get the weather from the API
+                weather = get_weather(city)
+                # Send the weather to the Discord channel
+                response = weather
+            
+            await message.channel.send(response)
 
 # Run the bot
 client.run(token)
