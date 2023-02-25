@@ -1,8 +1,9 @@
 import discord
-
+# Import the functions from the other files
 from discord_events import discord_on_ready
 from discord_events import discord_on_message
 
+# Create the bot client
 intents = discord.Intents.all()
 intents.members = True
 client = discord.Client(intents=intents)
