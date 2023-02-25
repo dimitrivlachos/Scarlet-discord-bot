@@ -19,12 +19,12 @@ async def on_message(client, message):
     print(message_contents)
 
     if len(message_contents) < 2:
-        await message.channel.send("Hi! I'm a bot! I can only tell the weather for now. Try typing 'weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
+        await message.channel.send("Hi! I'm a bot! I can only tell the weather for now. Try typing '@Scarlet AI weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
         return
     
     # Check if the message starts with the bot's name
     if message_contents[0] != f'<@{client.user.id}>':
-        await message.channel.send("Please start the message with my name! :smile: \n\nExample: @WeatherBot weather <city>\nOther commands will be added soon! :smile:")
+        await message.channel.send("Please start the message with my name! :smile: \n\nExample: '@Scarlet AI weather <city>'\nOther commands will be added soon! :smile:")
         return
     
     message_contents = message_contents[1:]
