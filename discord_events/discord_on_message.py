@@ -13,9 +13,13 @@ async def on_message(client, message):
     if client.user not in message.mentions:
         return
 
-    # Check if first word is bot's name
-    message_contents = message.content.lower.split(' ')
+    # Split the message into a list of words
+    message_contents = message.content.split(' ')
 
+    # Convert all the words to lowercase
+    message_contents = [word.lower() for word in message_contents]
+
+    # Print the message contents to the console
     print(message_contents)
 
     if len(message_contents) < 2:
@@ -45,3 +49,5 @@ async def on_message(client, message):
         # Send the response to the Discord channel
         await message.channel.send(response)
         return
+    
+    await message.channel.send("I don't know what you want me to do! :sweat_smile: \n\nTry typing '@Scarlet AI weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
