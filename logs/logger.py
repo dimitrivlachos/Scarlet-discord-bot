@@ -4,21 +4,26 @@ This module is used to create a logger object with a file handler.
 
 import logging
 
-file_name = 'bot_event_logs.log'
-
 # Create a logger object with a file handler
 logger = logging.getLogger(__name__)
 # Set the logger level to DEBUG
 logger.setLevel(logging.DEBUG)
-# Set the logger level to DEBUG
-handler = logging.FileHandler(file_name)
-handler.setLevel(logging.DEBUG)
 
+# Create a file handler and set its level and format
+file_name = 'bot_event_logs.log'
+file_handler = logging.FileHandler(file_name)
+file_handler.setLevel(logging.DEBUG)
 # Create a formatter and set the formatter for the handler.
 # The formatter will add a timestamp to the log message and format it like this:
 # 2021-01-01 00:00:00,000 DEBUG This is a log message
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-# Set the formatter for the handler
-handler.setFormatter(formatter)
-# Add the handler to the logger
-logger.addHandler(handler)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+# Create a stream handler and set its level and format
+# This will print log messages to the console
+stream_handler = logging.StreamHandler()
+stream_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(levelname)s: %(message)s')
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)

@@ -3,6 +3,7 @@ from logs.logger import logger
 
 # Function to get weather from OpenWeatherMap API
 async def get_weather(city):
+    logger.info(f"Getting weather for: {city}")
     # Get API key from binary file
     with open("config/open_weather.bin", "rb") as binary_file:
         api_key = binary_file.read().decode()
@@ -13,6 +14,7 @@ async def get_weather(city):
     
     # Check if city was found
     if response.status_code == 404:
+        logger.info(f"Couldn't find city: {city}")
         return "I couldn't find that city! :sob:"
 
     # Convert response to JSON
@@ -31,7 +33,6 @@ async def get_weather(city):
 
     # Format weather message
     weather = f'{city.title()} Weather: {weather_desc}, {temp_celsius}°C, with winds of {wind_kmh} km/h'
-
-    print(weather)
+    logger.info(f"Sending weather: {weather}")
 
     return weather

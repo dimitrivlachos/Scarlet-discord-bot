@@ -5,7 +5,7 @@ from discord_events import discord_on_message
 
 # Create the bot client
 intents = discord.Intents.all()
-intents.members = True
+#intents.members = True
 client = discord.Client(intents=intents)
 
 # Reads token from binary file

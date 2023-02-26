@@ -10,7 +10,6 @@ async def on_message(client, message):
     
     # Print the message to the console
     logger.info(f"Received message: {message.content}")
-    print("Received message:", message.content)
 
     # Correct old command
     # TO REMOVE SOON
@@ -41,10 +40,6 @@ async def parse_message(client, message):
     # Convert all the words to lowercase
     message_contents = [word.lower() for word in message_contents]
 
-    # Print the message contents to the console
-    print(message_contents)
-    
-
     if len(message_contents) < 2:
         await message.channel.send(f"Hi! I'm a bot! I can only tell the weather for now. Try typing '{client.user.mention} weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
         return
@@ -54,6 +49,7 @@ async def parse_message(client, message):
         await message.channel.send(f"Please start the message with my name! :smile: \n\nExample: '{client.user.mention} weather <city>'\nOther commands will be added soon! :smile:")
         return
     
+    # Remove the bot's name from the message
     message_contents = message_contents[1:]
     
     # Check if the message is a weather request
