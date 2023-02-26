@@ -1,5 +1,5 @@
 import discord
-# Import the functions from the other files
+from logs.logger import logger
 from discord_events import discord_on_ready
 from discord_events import discord_on_message
 
