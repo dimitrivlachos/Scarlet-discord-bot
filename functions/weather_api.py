@@ -1,15 +1,13 @@
 import requests
-from logs.logger import logger
+from utility.tokens import weather_api_key
+from utility.logger import logger
 
 # Function to get weather from OpenWeatherMap API
 async def get_weather(city):
     logger.info(f"Getting weather for: {city}")
-    # Get API key from binary file
-    with open("config/open_weather.bin", "rb") as binary_file:
-        api_key = binary_file.read().decode()
 
     # Get weather from API
-    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}'
+    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}'
     response = requests.get(url)
     
     # Check if city was found

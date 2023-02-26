@@ -1,6 +1,6 @@
 import discord
 import asyncio
-from logs.logger import logger
+from utility.logger import logger
 from functions import weather_api
 
 async def on_message(client, message):
