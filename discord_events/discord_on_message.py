@@ -14,7 +14,7 @@ async def on_message(client, message):
         return
 
     # Check if first word is bot's name
-    message_contents = message.content.split(' ')
+    message_contents = message.content.lower.split(' ')
 
     print(message_contents)
 

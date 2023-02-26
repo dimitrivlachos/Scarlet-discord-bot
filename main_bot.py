@@ -23,4 +23,4 @@ async def on_message(message):
     await discord_on_message.on_message(client, message)
 
 # Run the bot
-client.run(token)   
+client.run(token)
