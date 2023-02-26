@@ -8,6 +8,12 @@ async def on_message(client, message):
     
     # Print the message to the console
     print(message.content)
+
+    # Correct old command
+    # TO REMOVE SOON
+    if message.content.startswith('weather'):
+        await message.channel.send("I've changed my prefix to '@Scarlet AI!' :smile: \n\nTry @'ing me by typing '@Scarlet AI weather <city>'! :sunny:")
+        return
     
     # Ignore messages that don't mention the bot
     if client.user not in message.mentions:
@@ -21,12 +27,6 @@ async def on_message(client, message):
 
     # Print the message contents to the console
     print(message_contents)
-
-    # Correct old command
-    # TO REMOVE SOON
-    if message.startswith('weather'):
-        await message.channel.send("I've changed my prefix to @Scarlet AI! :smile: \n\nTry typing '@Scarlet AI weather <city>'! :sunny:")
-        return
 
     if len(message_contents) < 2:
         await message.channel.send("Hi! I'm a bot! I can only tell the weather for now. Try typing '@Scarlet AI weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
