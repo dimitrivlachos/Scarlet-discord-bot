@@ -1,5 +1,4 @@
 import requests
-import json
 from utility.tokens import WIT_AI_TOKEN
 
 # Define the Wit.ai API endpoint
