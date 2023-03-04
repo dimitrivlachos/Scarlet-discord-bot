@@ -1,6 +1,9 @@
 # Sensitive information
 config/
 
+# Test files
+_test/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
