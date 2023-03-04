@@ -54,11 +54,14 @@ async def parse_message(nlp):
         response (str): The response
     '''
     # Functions to handle each intent
+    # The key is the intent name, and the value is the function to handle the intent
+    # The function must take a WitNlp object as a parameter and return a string
     intent_functions = {
         'wit$get_weather': get_weather # This is the same as 'get_weather': get_weather
     }
 
     # Get the function to handle the intent
+    # If the intent is not found, return a default response
     intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
     response = await intent_function(nlp)
     return await response
