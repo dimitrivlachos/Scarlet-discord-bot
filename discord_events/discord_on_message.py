@@ -2,71 +2,90 @@ import discord
 import asyncio
 from utility.logger import logger
 from functions import weather_api
+from functions import wit_api
 
 async def on_message(client, message):
+    '''
+    Handles messages sent to the bot
+    
+    Parameters:
+        client (discord.Client): The bot client
+        message (discord.Message): The message sent to the bot
+        
+    Returns:
+        None
+    '''
     # Ignore messages sent by the bot itself
     if message.author == client.user:
         return
     
-    # Print the message to the console
-    logger.info(f"Received message: {message.content}")
+    # Create a WitNlp object
+    nlp = wit_api.WitNlp(message.content)
+    logger.info(f"Checked message: {nlp}")
+   
+    # Check if the message is a command for the bot
+    # If it isn't, return
+    if nlp.intent is None:
+        return
+    
+    # At this point, we know the message is a command for the bot, so we create a task to parse the message
+    task_response = asyncio.create_task(parse_message(nlp))
 
-    # Correct old command
-    # TO REMOVE SOON
-    if message.content.startswith('weather'):
-        # Send typing indicator
-        async with message.channel.typing():
-            await asyncio.sleep(2)
-        await message.channel.send(f"I've changed my prefix to '{client.user.mention}!' :smile: \n\nTry @'ing me by typing '{client.user.mention} weather <city>'! :sunny:")
-        return
-    
-    # Ignore messages that don't mention the bot
-    if client.user not in message.mentions:
-        return
-    
-    # At this point, we know the message is a command for the bot
-    # and that the bot will respond to it. So, we can send a typing indicator
+    # We also send a typing indicator so the user knows the bot is working on the response
+    # This is done asynchronously, so the request can be processed while the typing indicator is being shown
+
     # Send typing indicator
     async with message.channel.typing():
         await asyncio.sleep(2)
 
-    # Parse the message
-    await parse_message(client, message)
+    # Wait for the response to be created
+    response = await task_response
 
-async def parse_message(client, message):
-    # Split the message into a list of words
-    message_contents = message.content.split(' ')
+    # Send the response
+    await message.channel.send(response)
 
-    # Convert all the words to lowercase
-    message_contents = [word.lower() for word in message_contents]
-
-    if len(message_contents) < 2:
-        await message.channel.send(f"Hi! I'm a bot! I can only tell the weather for now. Try typing '{client.user.mention} weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
+async def on_message_edit(client, before, after):
+    # Ignore messages sent by the bot itself
+    if before.author == client.user:
         return
     
-    # Check if the message starts with the bot's name
-    if message_contents[0] != f'<@{client.user.id}>':
-        await message.channel.send(f"Please start the message with my name! :smile: \n\nExample: '{client.user.mention} weather <city>'\nOther commands will be added soon! :smile:")
-        return
+    # Re-run the on_message function
+    on_message(client, after)
+
+async def parse_message(nlp):
+    '''
+    Parses the message and returns the response
+
+    Parameters:
+        nlp (WitNlp): The WitNlp object
+
+    Returns:
+        response (str): The response
+    '''
+    # Functions to handle each intent
+    # The key is the intent name, and the value is the function to handle the intent
+    # The function must take a WitNlp object as a parameter and return a string
+    intent_functions = {
+        'wit$get_weather': get_weather # This is the same as 'get_weather': get_weather
+    }
+
+    # Get the function to handle the intent
+    # If the intent is not found, return a default response
+    intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
+    response = await intent_function(nlp)
+    return await response
+
+
+# Functions to handle each intent
+async def get_weather(nlp):
+    '''
+    Returns the weather for the given location
     
-    # Remove the bot's name from the message
-    message_contents = message_contents[1:]
-    
-    # Check if the message is a weather request
-    if message_contents[0] == 'weather':
-        # Check if the user specified a city
-        if len(message_contents) < 2:
-            await message.channel.send("I don't know what city you want the weather for!")
-            return
+    Parameters:
+        location (str): The location to get the weather for
         
-        # Get the city name from the message
-        city = message_contents[1]
-        # Get the weather from the API
-        weather = await weather_api.get_weather(city)
-        # Send the weather to the Discord channel
-        response = weather
-        # Send the response to the Discord channel
-        await message.channel.send(response)
-        return
-    
-    await message.channel.send(f"I don't know what you want me to do! :sweat_smile: \n\nTry typing '{client.user.mention} weather <city>'! :sunny:\n\nI'm still in development, so I'll be getting more features soon! :smile:")
+    Returns:
+        weather (str): The weather for the given location
+    '''
+    weather = weather_api.get_weather(nlp.location)
+    return weather

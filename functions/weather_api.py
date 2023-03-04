@@ -1,5 +1,5 @@
 import requests
-from utility.tokens import weather_api_key
+from utility.tokens import WEATHER_API_KEY
 from utility.logger import logger
 
 # Function to get weather from OpenWeatherMap API
@@ -7,13 +7,13 @@ async def get_weather(city):
     logger.info(f"Getting weather for: {city}")
 
     # Get weather from API
-    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}'
+    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}'
     response = requests.get(url)
     
     # Check if city was found
     if response.status_code == 404:
-        logger.info(f"Couldn't find city: {city}")
-        return "I couldn't find that city! :sob:"
+        logger.warning(f"Couldn't find city: {city}")
+        return None
 
     # Convert response to JSON
     weather_data = response.json()
