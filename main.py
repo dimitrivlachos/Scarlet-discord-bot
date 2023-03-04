@@ -17,6 +17,7 @@ async def on_ready():
 # Handles messages sent to the bot
 @client.event
 async def on_message(message):
+    print(message.content)
     await discord_on_message.on_message(client, message)
 
 @client.event

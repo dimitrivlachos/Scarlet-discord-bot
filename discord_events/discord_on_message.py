@@ -1,6 +1,8 @@
 import discord
 import asyncio
+from random import choice
 from utility.logger import logger
+from utility.tokens import BISCUIT_ID
 from functions import weather_api
 from functions import wit_api
 
@@ -66,14 +68,15 @@ async def parse_message(nlp):
     # The key is the intent name, and the value is the function to handle the intent
     # The function must take a WitNlp object as a parameter and return a string
     intent_functions = {
-        'wit$get_weather': get_weather # This is the same as 'get_weather': get_weather
+        'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
+        'dnd_hype': dnd_hype
     }
 
     # Get the function to handle the intent
     # If the intent is not found, return a default response
     intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
     response = await intent_function(nlp)
-    return await response
+    return response
 
 
 # Functions to handle each intent
@@ -87,5 +90,42 @@ async def get_weather(nlp):
     Returns:
         weather (str): The weather for the given location
     '''
-    weather = weather_api.get_weather(nlp.location)
+    weather = await weather_api.get_weather(nlp.location)
     return weather
+
+async def dnd_hype(nlp):
+
+    # List of negative responses
+    negative_responses = [
+        "I'm sorry to hear that :sob:",
+        "I hope you feel better soon :sweat_smile:",
+        "I hope you feel better :sweat_smile:",
+        "I hope we can play D&D soon :smile:"
+    ]
+
+    # List of neutral/positive responses
+    neutral_responses = [
+        "I hope you're ready for some D&D :smile:",
+        "I'm so hyped for D&D :smile:",
+        "I hope so!",
+        "I've been waiting for this all week :smile:",
+        f"{BISCUIT_ID} how are we looiing for D&D?",
+        f"{BISCUIT_ID} should we play D&D tonight?",
+        f"{BISCUIT_ID} are we playing D&D tonight?",
+        f"{BISCUIT_ID} are we playing D&D?",
+        f"{BISCUIT_ID} are we getting a level up tonight?",
+        f"{BISCUIT_ID} are we getting a level up?",
+        "I hope we're getting a level up tonight :sweat_smile:",
+        "Can I join in? :pleading_face:",
+        "Can I join this time? :pleading_face:",
+        f"{BISCUIT_ID} can I join in?"
+        ]
+    
+    # Choose a response based on the sentiment of the message
+    if nlp.sentiment == 'negative':
+        response = choice(negative_responses)
+    else:
+        response = choice(neutral_responses)
+    
+    # Return a random response
+    return response
