@@ -33,7 +33,7 @@ def wit_ai_request(message):
     data = response.json()
     return data
 
-def get_intent(data):
+def get_intent(data, confidence_threshold=0.5):
     '''
     Returns the intent from the Wit.ai response
 
@@ -44,9 +44,39 @@ def get_intent(data):
         intent (str): The intent
     '''
     intent = data['intents'][0]['name'] if data['intents'] else None
+
+    # Check if the confidence is above the threshold
+    if intent:
+        confidence = data['intents'][0]['confidence']
+        if confidence < confidence_threshold:
+            logger.warning(f"Intent confidence below threshold: {confidence}")
+            intent = None
+
     return intent
 
-def get_location(data):
+def get_sentiment(data, confidence_threshold=0.5):
+    '''
+    Returns the sentiment from the Wit.ai response
+
+    Parameters:
+        data (dict): The Wit.ai response
+
+    Returns:
+        sentiment (str): The sentiment
+    '''
+    traits = data['traits']
+    sentiment = traits['wit$sentiment:sentiment'][0]['value'] if 'wit$sentiment:sentiment' in traits else None
+    
+    # Check if the confidence is above the threshold
+    if sentiment:
+        confidence = traits['wit$sentiment:sentiment'][0]['confidence']
+        if confidence < confidence_threshold:
+            logger.warning(f"Sentiment confidence below threshold: {confidence}")
+            sentiment = None
+
+    return sentiment
+
+def get_location(data, confidence_threshold=0.5):
     '''
     Returns the location from the Wit.ai response
 
@@ -58,7 +88,29 @@ def get_location(data):
     '''
     entities = data['entities']
     location = entities['wit$location:location'][0]['resolved']['values'][0]['name'] if 'wit$location:location' in entities else None
+    
+    # Check if the confidence is above the threshold
+    if location:
+        confidence = entities['wit$location:location'][0]['confidence']
+        if confidence < confidence_threshold:
+            logger.warning(f"Location confidence below threshold: {confidence}")
+            location = None
+    
     return location
+
+def get_bot_id(data):
+    '''
+    Returns the bot id from the Wit.ai response
+
+    Parameters:
+        data (dict): The Wit.ai response
+
+    Returns:
+        bot_id (str): The bot id
+    '''
+    entities = data['entities']
+    bot_id = entities['wit$bot_id:bot_id'][0]['body'] if 'wit$bot_id:bot_id' in entities else None
+    return bot_id
 
 class WitNlp:
     def __init__(self, message):
@@ -66,6 +118,7 @@ class WitNlp:
         self.data = wit_ai_request(message) if message else None
         self.intent = get_intent(self.data) if self.data else None
         self.location = get_location(self.data) if self.data else None
+        self.bot_id = get_bot_id(self.data) if self.data else None
 
     def __repr__(self):
         return f"WitNlp(message='{self.message}', intent='{self.intent}', location='{self.location}')"
