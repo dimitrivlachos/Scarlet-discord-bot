@@ -21,9 +21,10 @@ async def on_message(client, message):
     
     # Create a WitNlp object
     nlp = wit_api.WitNlp(message.content)
-    logger.info(f"Created WitNlp: {nlp}")
+    logger.info(f"Checked message: {nlp}")
    
     # Check if the message is a command for the bot
+    # If it isn't, return
     if nlp.intent is None:
         return
     

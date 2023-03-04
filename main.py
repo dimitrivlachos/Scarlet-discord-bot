@@ -9,16 +9,19 @@ intents = discord.Intents.all()
 #intents.members = True
 client = discord.Client(intents=intents)
 
-
-# Prints a message to the console when the bot is ready
+# Handles the bot being ready
 @client.event
 async def on_ready():
     await discord_on_ready.on_ready(client)
 
-# Responds to messages with "Hello, World!" when mentioned
+# Handles messages sent to the bot
 @client.event
 async def on_message(message):
     await discord_on_message.on_message(client, message)
+
+@client.event
+async def on_message_edit(before, after):
+    await discord_on_message.on_message_edit(client, before, after)
 
 # Run the bot
 client.run(DISCORD_TOKEN)

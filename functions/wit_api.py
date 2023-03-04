@@ -118,10 +118,11 @@ class WitNlp:
         self.data = wit_ai_request(message) if message else None
         self.intent = get_intent(self.data) if self.data else None
         self.location = get_location(self.data) if self.data else None
+        self.sentiment = get_sentiment(self.data) if self.data else None
         self.bot_id = get_bot_id(self.data) if self.data else None
 
     def __repr__(self):
-        return f"WitNlp(message='{self.message}', intent='{self.intent}', location='{self.location}')"
+        return f"WitNlp(message='{self.message}', intent='{self.intent}', location='{self.location}', sentiment='{self.sentiment}')"
 
     def __str__(self):
-        return f"Intent: {self.intent}, Location: {self.location}"
+        return f"Intent: {self.intent}, Location: {self.location}, Sentiment: {self.sentiment}"
