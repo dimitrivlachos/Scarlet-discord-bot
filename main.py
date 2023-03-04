@@ -9,6 +9,7 @@ intents = discord.Intents.all()
 #intents.members = True
 client = discord.Client(intents=intents)
 
+
 # Prints a message to the console when the bot is ready
 @client.event
 async def on_ready():
@@ -20,4 +21,4 @@ async def on_message(message):
     await discord_on_message.on_message(client, message)
 
 # Run the bot
-client.run(discord_token)
+client.run(DISCORD_TOKEN)

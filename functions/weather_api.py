@@ -7,7 +7,7 @@ async def get_weather(city):
     logger.info(f"Getting weather for: {city}")
 
     # Get weather from API
-    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={weather_api_key}'
+    url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}'
     response = requests.get(url)
     
     # Check if city was found
