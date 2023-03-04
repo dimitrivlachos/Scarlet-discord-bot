@@ -1,10 +1,10 @@
 import discord
 import asyncio
+import re
 from random import choice
 from utility.logger import logger
 from utility.tokens import BISCUIT_ID
-from functions import weather_api
-from functions import wit_api
+from functions import weather_api, wit_api, dice
 
 async def on_message(client, message):
     '''
@@ -69,7 +69,8 @@ async def parse_message(nlp):
     # The function must take a WitNlp object as a parameter and return a string
     intent_functions = {
         'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
-        'dnd_hype': dnd_hype
+        'dnd_hype': dnd_hype,
+        'roll_dice': dice.roll_dice
     }
 
     # Get the function to handle the intent
@@ -129,3 +130,33 @@ async def dnd_hype(nlp):
     
     # Return a random response
     return response
+
+async def roll_dice(nlp):
+    '''
+    Rolls dice and returns the result
+    
+    Parameters:
+        nlp (WitNlp): The WitNlp object
+        
+    Returns:
+        result (str): The result of the dice roll
+    '''
+    # Get the number of dice and the number of sides
+    match = re.search(r'(\d+)d(\d+)', nlp.text)
+
+    if match is None:
+        return "What dice do you want me to roll?"
+    
+    # Check if there were two groups
+    if len(match.groups()) != 2:
+        return "Ask me to roll dice in the format 'roll 2d6'"
+    
+    number_of_dice = int(match.group(1))
+    number_of_sides = int(match.group(2))
+    
+    roll_results = dice.roll_dice(number_of_dice, number_of_sides)
+    
+    # Create the response
+    result = f"Rolling {number_of_dice}d{number_of_sides}\n{roll_results} = {sum(roll_results)}"
+
+    return result

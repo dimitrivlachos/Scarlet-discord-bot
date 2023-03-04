@@ -112,6 +112,19 @@ def get_bot_id(data):
     bot_id = entities['wit$bot_id:bot_id'][0]['body'] if 'wit$bot_id:bot_id' in entities else None
     return bot_id
 
+def get_text(data):
+    '''
+    Returns the text from the Wit.ai response
+
+    Parameters:
+        data (dict): The Wit.ai response
+
+    Returns:
+        text (str): The text
+    '''
+    text = data['text']
+    return text
+
 class WitNlp:
     def __init__(self, message):
         self.message = message
@@ -120,6 +133,7 @@ class WitNlp:
         self.location = get_location(self.data) if self.data else None
         self.sentiment = get_sentiment(self.data) if self.data else None
         self.bot_id = get_bot_id(self.data) if self.data else None
+        self.text = get_text(self.data) if self.data else None
 
     def __repr__(self):
         return f"WitNlp(message='{self.message}', intent='{self.intent}', location='{self.location}', sentiment='{self.sentiment}')"
