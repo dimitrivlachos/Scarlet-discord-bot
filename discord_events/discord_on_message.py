@@ -43,6 +43,14 @@ async def on_message(client, message):
     # Send the response
     await message.channel.send(response)
 
+async def on_message_edit(client, before, after):
+    # Ignore messages sent by the bot itself
+    if before.author == client.user:
+        return
+    
+    # Re-run the on_message function
+    on_message(client, after)
+
 async def parse_message(nlp):
     '''
     Parses the message and returns the response
