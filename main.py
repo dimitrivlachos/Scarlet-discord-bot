@@ -1,5 +1,5 @@
 import discord
-from utility.tokens import discord_token
+from utility.tokens import DISCORD_TOKEN
 from utility.logger import logger
 from discord_events import discord_on_ready
 from discord_events import discord_on_message

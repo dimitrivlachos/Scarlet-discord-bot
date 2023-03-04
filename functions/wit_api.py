@@ -1,5 +1,6 @@
 import requests
 from utility.tokens import WIT_AI_TOKEN
+from utility.logger import logger
 
 # Define the Wit.ai API endpoint
 WIT_API_ENDPOINT = 'https://api.wit.ai/message'
@@ -20,7 +21,15 @@ def wit_ai_request(message):
     params = {'q': message}
 
     # Call the Wit.ai API to get the NLP response
-    response = requests.get(WIT_API_ENDPOINT, headers=headers, params=params, timeout=5)
+    try:
+        response = requests.get(WIT_API_ENDPOINT, headers=headers, params=params, timeout=5)
+    except requests.exceptions.Timeout:
+        logger.error(f"Wit.ai request timed out")
+        return None
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Wit.ai request error: {e}")
+        return None
+    
     data = response.json()
     return data
 
@@ -50,3 +59,16 @@ def get_location(data):
     entities = data['entities']
     location = entities['wit$location:location'][0]['resolved']['values'][0]['name'] if 'wit$location:location' in entities else None
     return location
+
+class WitNlp:
+    def __init__(self, message):
+        self.message = message
+        self.data = wit_ai_request(message) if message else None
+        self.intent = get_intent(self.data) if self.data else None
+        self.location = get_location(self.data) if self.data else None
+
+    def __repr__(self):
+        return f"WitNlp(message='{self.message}', intent='{self.intent}', location='{self.location}')"
+
+    def __str__(self):
+        return f"Intent: {self.intent}, Location: {self.location}"
