@@ -70,7 +70,7 @@ async def parse_message(nlp):
     intent_functions = {
         'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
         'dnd_hype': dnd_hype,
-        'roll_dice': dice.roll_dice
+        'roll_dice': roll_dice
     }
 
     # Get the function to handle the intent
@@ -95,7 +95,6 @@ async def get_weather(nlp):
     return weather
 
 async def dnd_hype(nlp):
-
     # List of negative responses
     negative_responses = [
         "I'm sorry to hear that :sob:",
@@ -110,7 +109,7 @@ async def dnd_hype(nlp):
         "I'm so hyped for D&D :smile:",
         "I hope so!",
         "I've been waiting for this all week :smile:",
-        f"{BISCUIT_ID} how are we looiing for D&D?",
+        f"{BISCUIT_ID} how are we looiking for D&D?",
         f"{BISCUIT_ID} should we play D&D tonight?",
         f"{BISCUIT_ID} are we playing D&D tonight?",
         f"{BISCUIT_ID} are we playing D&D?",
@@ -145,11 +144,11 @@ async def roll_dice(nlp):
     match = re.search(r'(\d+)d(\d+)', nlp.text)
 
     if match is None:
-        return "What dice do you want me to roll?"
+        return "What dice do you want me to roll?\nAsk me to roll dice in a format like: 'roll 2d6' :see_no_evil:"
     
     # Check if there were two groups
-    if len(match.groups()) != 2:
-        return "Ask me to roll dice in the format 'roll 2d6'"
+    #if len(match.groups()) != 2:
+        #return "Ask me to roll dice in the format 'roll 2d6'"
     
     number_of_dice = int(match.group(1))
     number_of_sides = int(match.group(2))

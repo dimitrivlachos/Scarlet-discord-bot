@@ -7,7 +7,7 @@ from discord_events import discord_on_message
 # Create the bot client
 intents = discord.Intents.all()
 #intents.members = True
-client = discord.Client(intents=intents)
+client = discord.Client(intents=intents, activity=discord.Game(name="with your feelings"))
 
 # Handles the bot being ready
 @client.event
