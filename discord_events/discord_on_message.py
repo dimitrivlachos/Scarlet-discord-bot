@@ -21,30 +21,14 @@ async def on_message(client, message):
     if message.author == client.user:
         return
     
-    # Create a WitNlp object
-    nlp = wit_api.WitNlp(message.content)
-    logger.info(f"Checked message: {nlp}")
-   
-    # Check if the message is a command for the bot
-    # If it isn't, return
-    if nlp.intent is None:
-        return
-    
-    # At this point, we know the message is a command for the bot, so we create a task to parse the message
-    task_response = asyncio.create_task(parse_message(nlp))
+    # Check if the message uses the bot's prefix
+    # todo
 
-    # We also send a typing indicator so the user knows the bot is working on the response
-    # This is done asynchronously, so the request can be processed while the typing indicator is being shown
+    # Create a task to get the response
+    process_nlp_response = asyncio.create_task(parse_nlp_task(client, message))
 
-    # Send typing indicator
-    async with message.channel.typing():
-        await asyncio.sleep(2)
-
-    # Wait for the response to be created
-    response = await task_response
-
-    # Send the response
-    await message.channel.send(response)
+    # Wait for the message to be processed
+    await process_nlp_response
 
 async def on_message_edit(client, before, after):
     '''
@@ -57,22 +41,7 @@ async def on_message_edit(client, before, after):
     # Re-run the on_message function
     on_message(client, after)
 
-async def send_message(channel_id, message):
-    '''
-    Sends a message to a channel
-    
-    Parameters:
-        client (discord.Client): The bot client
-        channel_id (int): The ID of the channel to send the message to
-        message (str): The message to send
-        
-    Returns:
-        None
-    '''
-    channel = client.get_channel(channel_id)
-    await channel.send()
-
-async def parse_message(nlp, confidence_threshold=0.8):
+async def parse_nlp_task(client, message, confidence_threshold=0.8):
     '''
     Parses the message and returns the response
 
@@ -82,7 +51,16 @@ async def parse_message(nlp, confidence_threshold=0.8):
     Returns:
         response (str): The response
     '''
-
+    # Create a WitNlp object
+    nlp = wit_api.WitNlp(message.content)
+    logger.info(f"Checked message: {nlp}")
+   
+    # Check if the message is a command for the bot
+    # If it isn't, return
+    if nlp.intents is None:
+        logger.info("No intent found") 
+        return
+    
     # Functions to handle each intent
     # The key is the intent name, and the value is the function to handle the intent
     # The function must take a WitNlp object as a parameter and return a string
@@ -91,17 +69,21 @@ async def parse_message(nlp, confidence_threshold=0.8):
         'roll_dice': roll_dice
     }
 
-    intents = nlp.intents
+    # Check if the intent is above the confidence threshold
+    intents = [intent for intent in nlp.intents if intent.confidence > confidence_threshold]
 
+    # For each intent, get the function to handle the intent
+    # If the intent is not found, return a default response
     for intent in intents:
-        if intent.confidence > confidence_threshold:
-            
+        logger.info(f"Intent: {intent.name}")
+        task = intent_functions.get(intent.name, lambda: "I don't know how to do that yet :sob:")
+        await send_message(client, message, nlp, task)
 
     # Get the function to handle the intent
     # If the intent is not found, return a default response
-    intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
-    response = await intent_function(nlp)
-    return response
+    #intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
+    #response = await intent_function(nlp)
+    #return response
 
 
 # Functions to handle each intent
@@ -115,7 +97,15 @@ async def get_weather(nlp):
     Returns:
         weather (str): The weather for the given location
     '''
-    weather = await weather_api.get_weather(nlp.location)
+    # Check if there is a location entity
+    if 'wit$location:location' not in nlp.entities:
+        return "Where do you want the weather for?\nAsk me in a format like: 'what's the weather in London?' :see_no_evil:"
+
+    # Get the location from the entities
+    # This will only pull the first location mentioned, if there are multiple locations, the rest will be ignored
+    location = nlp.entities['wit$location:location'][0]['resolved']['values'][0]['name']
+
+    weather = await weather_api.get_weather(location)
     return weather
 
 async def roll_dice(nlp):
@@ -147,3 +137,27 @@ async def roll_dice(nlp):
     result = f"Rolling {number_of_dice}d{number_of_sides}\n{roll_results} = {sum(roll_results)}"
 
     return result
+
+async def send_message(client, message, nlp, task):
+    '''
+    Sends a message to the channel the message was sent in
+    
+    Parameters:
+        message (discord.Message): The message sent to the bot
+        task (asyncio.Task): The task to get the response
+        
+    Returns:
+        None'''
+    # Create a task to get the response
+    message_task = asyncio.create_task(task(nlp))
+
+    # We also send a typing indicator so the user knows the bot is working on the response
+    # This is done asynchronously, so the request can be processed while the typing indicator is being shown
+    async with message.channel.typing():
+        await asyncio.sleep(2)
+
+    # Wait for the response to be created
+    response = await message_task
+
+    # Send the response
+    await message.channel.send(response)

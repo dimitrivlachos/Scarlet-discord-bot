@@ -56,13 +56,13 @@ class WitNlp:
     def __str__(self):
         return f"WitNlp(message='{self.message}')"
     
-    class intent:
-        def __init__(self, name, confidence):
-            self.name = name
-            self.confidence = confidence
+class intent:
+    def __init__(self, name, confidence):
+        self.name = name
+        self.confidence = confidence
 
-        def __repr__(self):
-            return f"{self.name} ({self.confidence} confidence)"
+    def __repr__(self):
+        return f"{self.name} ({self.confidence} confidence)"
 
-        def __str__(self):
-            return f"{self.name} ({self.confidence} confidence)"
+    def __str__(self):
+        return f"{self.name} ({self.confidence} confidence)"
