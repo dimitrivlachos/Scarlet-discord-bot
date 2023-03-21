@@ -47,6 +47,9 @@ async def on_message(client, message):
     await message.channel.send(response)
 
 async def on_message_edit(client, before, after):
+    '''
+    Handles messages edited by the user
+    '''
     # Ignore messages sent by the bot itself
     if before.author == client.user:
         return
@@ -54,7 +57,22 @@ async def on_message_edit(client, before, after):
     # Re-run the on_message function
     on_message(client, after)
 
-async def parse_message(nlp):
+async def send_message(channel_id, message):
+    '''
+    Sends a message to a channel
+    
+    Parameters:
+        client (discord.Client): The bot client
+        channel_id (int): The ID of the channel to send the message to
+        message (str): The message to send
+        
+    Returns:
+        None
+    '''
+    channel = client.get_channel(channel_id)
+    await channel.send()
+
+async def parse_message(nlp, confidence_threshold=0.8):
     '''
     Parses the message and returns the response
 
@@ -64,14 +82,20 @@ async def parse_message(nlp):
     Returns:
         response (str): The response
     '''
+
     # Functions to handle each intent
     # The key is the intent name, and the value is the function to handle the intent
     # The function must take a WitNlp object as a parameter and return a string
     intent_functions = {
         'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
-        'dnd_hype': dnd_hype,
         'roll_dice': roll_dice
     }
+
+    intents = nlp.intents
+
+    for intent in intents:
+        if intent.confidence > confidence_threshold:
+            
 
     # Get the function to handle the intent
     # If the intent is not found, return a default response
@@ -93,42 +117,6 @@ async def get_weather(nlp):
     '''
     weather = await weather_api.get_weather(nlp.location)
     return weather
-
-async def dnd_hype(nlp):
-    # List of negative responses
-    negative_responses = [
-        "I'm sorry to hear that :sob:",
-        "I hope you feel better soon :sweat_smile:",
-        "I hope you feel better :sweat_smile:",
-        "I hope we can play D&D soon :smile:"
-    ]
-
-    # List of neutral/positive responses
-    neutral_responses = [
-        "I hope you're ready for some D&D :smile:",
-        "I'm so hyped for D&D :smile:",
-        "I hope so!",
-        "I've been waiting for this all week :smile:",
-        f"{BISCUIT_ID} how are we looiking for D&D?",
-        f"{BISCUIT_ID} should we play D&D tonight?",
-        f"{BISCUIT_ID} are we playing D&D tonight?",
-        f"{BISCUIT_ID} are we playing D&D?",
-        f"{BISCUIT_ID} are we getting a level up tonight?",
-        f"{BISCUIT_ID} are we getting a level up?",
-        "I hope we're getting a level up tonight :sweat_smile:",
-        "Can I join in? :pleading_face:",
-        "Can I join this time? :pleading_face:",
-        f"{BISCUIT_ID} can I join in?"
-        ]
-    
-    # Choose a response based on the sentiment of the message
-    if nlp.sentiment == 'negative':
-        response = choice(negative_responses)
-    else:
-        response = choice(neutral_responses)
-    
-    # Return a random response
-    return response
 
 async def roll_dice(nlp):
     '''
