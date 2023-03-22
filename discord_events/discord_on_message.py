@@ -5,6 +5,9 @@ from random import choice
 from utility.logger import logger
 from utility.tokens import BISCUIT_ID
 from functions import weather_api, wit_api, dice
+import sqlite3
+
+RESPONSE_DB = "db/responses.db"
 
 async def on_message(client, message):
     '''
@@ -66,7 +69,8 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     # The function must take a WitNlp object as a parameter and return a string
     intent_functions = {
         'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
-        'roll_dice': roll_dice
+        'roll_dice': roll_dice,
+        'got_sick': respond_sick
     }
 
     # Check if the intent is above the confidence threshold
@@ -137,6 +141,27 @@ async def roll_dice(nlp):
     result = f"Rolling {number_of_dice}d{number_of_sides}\n{roll_results} = {sum(roll_results)}"
 
     return result
+
+async def respond_sick(nlp):
+    '''
+    Returns a response to the user being sick
+    
+    Parameters:
+        nlp (WitNlp): The WitNlp object
+        
+    Returns:
+        response (str): The response
+    '''
+    # Get a random response from a database
+    conn = sqlite3.connect(RESPONSE_DB)
+    c = conn.cursor()
+
+    c.execute("SELECT response FROM sick_responses ORDER BY RANDOM() LIMIT 1")
+    response = c.fetchone()[0]
+
+    conn.close()
+
+    return response
 
 async def send_message(client, message, nlp, task):
     '''
