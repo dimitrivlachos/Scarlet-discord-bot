@@ -1,5 +1,4 @@
 #from utility.logger import logger
-from logger import logger
 import sqlite3
 import sys
 
