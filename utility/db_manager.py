@@ -138,6 +138,40 @@ def delete_table(table):
     
     logger.info(f"Deleted table {table}")
 
+def get_random_response(table):
+    '''
+    Gets a random response from the database
+    '''
+    # Connect to the database
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    # Get a random response
+    c.execute(f"SELECT response FROM {table} ORDER BY RANDOM() LIMIT 1")
+    response = c.fetchone()[0]
+    
+    # Close the connection
+    conn.close()
+    
+    return response
+
+def run_query(query):
+    '''
+    Runs a query on the database
+    '''
+    # Connect to the database
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    # Run the query
+    c.execute(query)
+    result = c.fetchall()
+    
+    # Close the connection
+    conn.close()
+    
+    return result
+
 def help():
     print("add <table> <response> - Adds a response to the database")
     print("delete <table> <response> - Deletes a response from the database")
@@ -146,6 +180,9 @@ def help():
     print("list_tables - Lists all the tables in the database")
     print("create_table <table> - Creates a table in the database")
     print("delete_table <table> - Deletes a table from the database")
+    print("get_random_response <table> - Gets a random response from the database")
+    print("run_query <query> - Runs a query on the database")
+    print("help - Shows this help message")
 
 # Run the script from the command line
 if __name__ == "__main__":
@@ -181,6 +218,10 @@ if __name__ == "__main__":
         create_table(response)
     elif command == "delete_table":
         delete_table(table)
+    elif command == "get_random_response":
+        print(get_random_response(table))
+    elif command == "run_query":
+        print(run_query(response))
     elif command == "help":
         help()
     else:
