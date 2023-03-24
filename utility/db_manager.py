@@ -1,4 +1,3 @@
-#from utility.logger import logger
 import sqlite3
 import sys
 
@@ -21,7 +20,7 @@ def add_to_db(table, response):
     # Close the connection
     conn.close()
     
-    logger.info("Response added to database")
+    print("Response added to database")
 
 def delete_from_db(table, response):
     '''
@@ -40,7 +39,7 @@ def delete_from_db(table, response):
     # Close the connection
     conn.close()
     
-    logger.info("Response deleted from database")
+    print("Response deleted from database")
 
 def list_responses(table):
     '''
@@ -78,7 +77,7 @@ def clear(table):
     # Close the connection
     conn.close()
     
-    logger.info("Responses cleared from database")
+    print("Responses cleared from database")
 
 def list_tables():
     '''
@@ -116,7 +115,7 @@ def create_table(table):
     # Close the connection
     conn.close()
     
-    logger.info(f"Created table {table}")
+    print(f"Created table {table}")
 
 def delete_table(table):
     '''
@@ -135,7 +134,7 @@ def delete_table(table):
     # Close the connection
     conn.close()
     
-    logger.info(f"Deleted table {table}")
+    print(f"Deleted table {table}")
 
 def get_random_response(table):
     '''
