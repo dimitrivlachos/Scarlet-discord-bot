@@ -3,9 +3,9 @@ import asyncio
 import re
 from random import choice
 from utility.logger import logger
-from utility.tokens import BISCUIT_ID
+from utility.tokens import BISCUIT_ID # Author's user ID
+import utility.db_manager as db
 from functions import weather_api, wit_api, dice
-import sqlite3
 
 RESPONSE_DB = "db/responses.db"
 
@@ -153,13 +153,7 @@ async def respond_sick(nlp):
         response (str): The response
     '''
     # Get a random response from a database
-    conn = sqlite3.connect(RESPONSE_DB)
-    c = conn.cursor()
-
-    c.execute("SELECT response FROM sick_responses ORDER BY RANDOM() LIMIT 1")
-    response = c.fetchone()[0]
-
-    conn.close()
+    response = db.get_random_response('sick_responses')
 
     return response
 
