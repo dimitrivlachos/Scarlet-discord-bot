@@ -56,12 +56,13 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     '''
     # Create a WitNlp object
     nlp = wit_api.WitNlp(message.content)
-    logger.info(f"Checked message: {nlp}")
+    logger.info(f"Checked message from <{message.author}>: {nlp}")
+    logger.info(f"Intents: {nlp.intents}")
    
     # Check if the message is a command for the bot
     # If it isn't, return
-    if nlp.intents is None:
-        logger.info("No intent found") 
+    if len(nlp.intents) == 0:
+        logger.info("No intents found")
         return
     
     # Functions to handle each intent
