@@ -60,9 +60,10 @@ class intent:
     def __init__(self, name, confidence):
         self.name = name
         self.confidence = confidence
+        self.confidence_percent = round(confidence, 2)
 
     def __repr__(self):
         return f"{self.name} ({self.confidence} confidence)"
 
     def __str__(self):
-        return f"{self.name} ({self.confidence} confidence)"
+        return f"{self.name} ({self.confidence_percent}% confidence)"
