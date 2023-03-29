@@ -1,14 +1,10 @@
 import discord
 import asyncio
 import re
-from random import choice
 from utility.logger import logger
-from utility.tokens import BISCUIT_ID # Author's user ID
 import utility.db_manager as db
 from functions import weather_api, wit_api, dice
 from functions.send import send_message
-
-RESPONSE_DB = "db/responses.db"
 
 async def on_message(client, message):
     '''
@@ -23,6 +19,10 @@ async def on_message(client, message):
     '''
     # Ignore messages sent by the bot itself
     if message.author == client.user:
+        return
+    
+    # Ignore messages sent by other bots
+    if message.author.bot:
         return
     
     # Check if the message uses the bot's prefix
@@ -69,16 +69,19 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     # Functions to handle each intent
     # The key is the intent name, and the value is the function to handle the intent
     # The function must take a WitNlp object as a parameter and return a string
-    intent_functions = {
-        'wit$get_weather': get_weather, # This is the same as 'get_weather': get_weather
-        'roll_dice': roll_dice,
-        'got_sick': respond_sick
-    }
-
-    function_typing_time_max = {
-        'wit$get_weather': 1.5,
-        'roll_dice': 0.5,
-        'got_sick': 10
+    intent_config = {
+        'wit$get_weather': {
+            'function': get_weather,
+            'max_typing_time': 1.5
+        },
+        'roll_dice': {
+            'function': roll_dice,
+            'max_typing_time': 0.5
+        },
+        'got_sick': {
+            'function': respond_sick,
+            'max_typing_time': 10
+        }
     }
 
     # Check if the intent is above the confidence threshold
@@ -88,18 +91,13 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     # If the intent is not found, return a default response
     for intent in intents:
         logger.info(f"Intent: {intent.name}")
-        # Get the function to handle the intent
-        task = intent_functions.get(intent.name, lambda: "I don't know how to do that yet :sob:")
-        # Get the max typing time
-        max_typing_time = function_typing_time_max.get(intent.name, 3)
+        # Get the function and max typing time for the intent
+        intent_config_data = intent_config.get(intent.name, {'function': lambda: "I don't know how to do that yet :sob:", 'max_typing_time': 3})
+        task = intent_config_data['function']
+        max_typing_time = intent_config_data['max_typing_time']
         # Run the function
         await send_message(client, message, nlp, task, max_wait_time=max_typing_time)
 
-    # Get the function to handle the intent
-    # If the intent is not found, return a default response
-    #intent_function = intent_functions.get(nlp.intent, lambda: "I don't know how to do that yet :sob:")
-    #response = await intent_function(nlp)
-    #return response
 
 
 # Functions to handle each intent
