@@ -6,6 +6,7 @@ from utility.logger import logger
 from utility.tokens import BISCUIT_ID # Author's user ID
 import utility.db_manager as db
 from functions import weather_api, wit_api, dice
+from functions.send import send_message
 
 RESPONSE_DB = "db/responses.db"
 
@@ -74,6 +75,12 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
         'got_sick': respond_sick
     }
 
+    function_typing_time_max = {
+        'wit$get_weather': 1.5,
+        'roll_dice': 0.5,
+        'got_sick': 10
+    }
+
     # Check if the intent is above the confidence threshold
     intents = [intent for intent in nlp.intents if intent.confidence > confidence_threshold]
 
@@ -81,8 +88,12 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     # If the intent is not found, return a default response
     for intent in intents:
         logger.info(f"Intent: {intent.name}")
+        # Get the function to handle the intent
         task = intent_functions.get(intent.name, lambda: "I don't know how to do that yet :sob:")
-        await send_message(client, message, nlp, task)
+        # Get the max typing time
+        max_typing_time = function_typing_time_max.get(intent.name, 3)
+        # Run the function
+        await send_message(client, message, nlp, task, max_wait_time=max_typing_time)
 
     # Get the function to handle the intent
     # If the intent is not found, return a default response
@@ -111,6 +122,10 @@ async def get_weather(nlp):
     location = nlp.entities['wit$location:location'][0]['resolved']['values'][0]['name']
 
     weather = await weather_api.get_weather(location)
+
+    if weather is None:
+        return f"I couldn't find the weather for {location} :sob: are you sure that's a real place?"
+
     return weather
 
 async def roll_dice(nlp):
@@ -158,26 +173,3 @@ async def respond_sick(nlp):
 
     return response
 
-async def send_message(client, message, nlp, task):
-    '''
-    Sends a message to the channel the message was sent in
-    
-    Parameters:
-        message (discord.Message): The message sent to the bot
-        task (asyncio.Task): The task to get the response
-        
-    Returns:
-        None'''
-    # Create a task to get the response
-    message_task = asyncio.create_task(task(nlp))
-
-    # We also send a typing indicator so the user knows the bot is working on the response
-    # This is done asynchronously, so the request can be processed while the typing indicator is being shown
-    async with message.channel.typing():
-        await asyncio.sleep(2)
-
-    # Wait for the response to be created
-    response = await message_task
-
-    # Send the response
-    await message.channel.send(response)
