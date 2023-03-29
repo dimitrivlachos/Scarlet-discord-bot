@@ -3,13 +3,20 @@
 My very own discord bot!
 
 ## Setup
-You will need to create another folder called 'config' and within it create a .bin file called 'token' and paste your bot token in there. You will also need to create a .bin file called 'open_weather' and paste your open weather api key in there.
+You will need to create another folder called 'config' and within it create a .bin files for several api tokens. 
+* Discord api token
+* Open weather api token
+* Wit.ai api token
 
-You can use the text_to_bin.py file to convert your token and api key to a .bin file. By typing in the command line:
-```python text_to_bin.py "Hello World" hello.bin```
+You can use the text_to_bin.py file in /utility to convert your tokens and api keys to .bin files. By typing in the command line:
+```python text_to_bin.py "<api key>" token.bin```
 
 ## Commands
-In order to use the commands you will need to prefix them with an @ mention of the bot. For example:
-```@Scarlet weather 'city'```
-### General
-weather 'city' - Get the weather for a city
+Scarlet AI does not have a prefix, instead, she uses Wit.ai to understand what you are saying through natural language processing.
+
+So far, Scarlet AI can do the following:
+* Get the weather for a town or city mentioned
+* Roll dice using the format 'roll 2d6'
+* Respond to someone saying that they're sick with a get well soon message
+* ~~Get the current time in a city mentioned~~
+* ~~Respond to a 'hello' or 'hi' with a greeting~~
