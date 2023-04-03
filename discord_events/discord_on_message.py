@@ -118,7 +118,8 @@ async def get_weather(nlp):
 
     # Get the location from the entities
     # This will only pull the first location mentioned, if there are multiple locations, the rest will be ignored
-    location = nlp.entities['wit$location:location'][0]['resolved']['values'][0]['name']
+    #location = nlp.entities['wit$location:location'][0]['resolved']['values'][0]['name']
+    location = nlp.entities['wit$location:location'][0]['body']
 
     weather = await weather_api.get_weather(location)
 
