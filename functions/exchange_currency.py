@@ -6,7 +6,7 @@ url = "https://api.apilayer.com/exchangerates_data/convert?to=GBP&from=USD&amoun
 
 payload = {}
 headers= {
-  "apikey": "26txEcOhY4nJeB3E2ELMlgy6MRceiU6c"
+  "apikey": "-"
 }
 
 response = requests.request("GET", url, headers=headers, data = payload)
