@@ -3,6 +3,7 @@ import asyncio
 import re
 from utility.logger import logger
 import utility.db_manager as db
+from utility.tokens import BOT_ID
 from functions import weather_api, wit_api, dice
 from functions.send import send_message
 
@@ -26,7 +27,10 @@ async def on_message(client, message):
         return
     
     # Check if the message uses the bot's prefix
-    # todo
+    # If the message contains the bot's ID, it is a direct message
+    if len(message.mentions) > 0:
+        if BOT_ID in message.mentions:
+            logger.info(f"Message from {message.author} is a direct message")
 
     # Create a task to get the response
     process_nlp_response = asyncio.create_task(parse_nlp_task(client, message))
@@ -55,8 +59,12 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     Returns:
         response (str): The response
     '''
+    # Remove mentions from the message using a regex
+    # This will remove all mentions, including @everyone and @here
+    msg = re.sub(r'<@!?\d+>', '', message.content)
+
     # Create a WitNlp object
-    nlp = wit_api.WitNlp(message.content)
+    nlp = wit_api.WitNlp(msg)
     logger.info(f"Checked message from <{message.author}>: {nlp}")
    
     # Check if the message is a command for the bot
