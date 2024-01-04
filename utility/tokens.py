@@ -2,10 +2,12 @@
 Import the tokens from the files in the config directory.
 '''
 global BISCUIT_ID
-global BOT_IDS
+global BOT_ID
 global DISCORD_TOKEN
 global WEATHER_API_KEY
 global WIT_AI_TOKEN
+
+BOT_ID = 1078849300882280468
 
 # Reads bot token from binary file
 with open("config/token.bin", "rb") as binary_file:
