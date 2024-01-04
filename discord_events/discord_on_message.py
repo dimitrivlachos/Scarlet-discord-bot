@@ -60,7 +60,6 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
         response (str): The response
     '''
     # Remove mentions from the message using a regex
-    # This will remove all mentions, including @everyone and @here
     msg = re.sub(r'<@!?\d+>', '', message.content)
 
     # Create a WitNlp object
