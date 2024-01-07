@@ -7,7 +7,7 @@ global DISCORD_TOKEN
 global WEATHER_API_KEY
 global WIT_AI_TOKEN
 
-BOT_ID = 1078849300882280468
+#BOT_ID = 1078849300882280468 # This is unecessary as the bot can get its own ID by using client.user.id
 
 # Reads bot token from binary file
 with open("config/token.bin", "rb") as binary_file:
