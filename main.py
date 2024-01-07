@@ -1,28 +1,42 @@
 import discord
+from discord.ext import commands
+import asyncio
 from utility.tokens import DISCORD_TOKEN
 from utility.logger import logger
 from discord_events import discord_on_ready
 from discord_events import discord_on_message
+from cogs.music_cog import music_cog
 
 # Create the bot client
 intents = discord.Intents.all()
-#intents.members = True
-client = discord.Client(intents=intents)#, activity=discord.Game(name="with your feelings"))
+bot = commands.Bot(command_prefix='&', intents=intents)
 
 # Handles the bot being ready
-@client.event
+@bot.event
 async def on_ready():
-    await discord_on_ready.on_ready(client)
+    await discord_on_ready.on_ready(bot)
 
 # Handles messages sent to the bot
-@client.event
+@bot.event
 async def on_message(message):
+    print("Message received")
     print(message.content)
-    await discord_on_message.on_message(client, message)
+    print("Message content printed")
+    await discord_on_message.on_message(bot, message)
+    print("Message processed")
+    await bot.process_commands(message)
+    print("Message commands processed")
 
-@client.event
+@bot.event
 async def on_message_edit(before, after):
-    await discord_on_message.on_message_edit(client, before, after)
+    await discord_on_message.on_message_edit(bot, before, after)
 
 # Run the bot
-client.run(DISCORD_TOKEN)
+#client.run(DISCORD_TOKEN)
+
+async def main():
+    async with bot:
+        await bot.add_cog(music_cog(bot))
+        await bot.start(DISCORD_TOKEN)
+
+asyncio.run(main())
