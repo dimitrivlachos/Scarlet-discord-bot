@@ -3,7 +3,6 @@ import asyncio
 import re
 from utility.logger import logger
 import utility.db_manager as db
-from utility.tokens import BOT_ID
 from functions import weather_api, wit_api, dice
 from functions.send import send_message
 
@@ -25,18 +24,86 @@ async def on_message(client, message):
     # Ignore messages sent by other bots
     if message.author.bot:
         return
-    
+    '''
     # Check if the message uses the bot's prefix
     # If the message contains the bot's ID, it is a direct message
     if len(message.mentions) > 0:
-        if BOT_ID in message.mentions:
-            logger.info(f"Message from {message.author} is a direct message")
+        logger.info(f"Message from {message.author} contains an @mention")
+
+        # Check if the bot was @mentioned
+        if client.user in message.mentions:
+            logger.info(f"Message from {message.author} @mentions bot, checking for command")
+
+            # Check if the message contains a command
+            command = parse_command(message)
+            if command is not None:
+                logger.info(f"Message from {message.author} contains a command, running command")
+
+                if command == 'play':
+                    if re.search(r'youtube.com/watch\?v=', message.content) is not None:
+                        # Get the youtube link
+                        match = re.search(r'youtube.com/watch\?v=(\S+)', message.content)
+                        url = match.group(1)
+                        url = f'https://www.youtube.com/watch?v={url}'
+                        logger.info(f"Youtube link: {url}")
+                        music_task = music_player.play(message.author.voice.channel, url)
+                        logger.info("Finished playing audio")
+                        return
+                    
+                    await send_message(client, message, None, lambda: "What youtube link do you want me to play?\nAsk me to play a youtube link in a format like: 'play https://www.youtube.com/watch?v=dQw4w9WgXcQ' :see_no_evil:")
+                
+                elif command == 'stop':
+                    await music_player.stop_yt_audio(client, message.author.voice.channel)
+                    return
+                elif command == 'test':
+                    await music_player.play_test_audio(client, message.author.voice.channel)
+                    return
+    '''
+    '''
+            # Check if the message contains a youtube link
+            if re.search(r'youtube.com/watch\?v=', message.content) is not None:
+                logger.info(f"Message from {message.author} contains a youtube link, playing audio")
+                # Get the youtube link
+                match = re.search(r'youtube.com/watch\?v=(\S+)', message.content)
+                url = match.group(1)
+                url = f'https://www.youtube.com/watch?v={url}'
+                logger.info(f"Youtube link: {url}")
+                await play_yt_audio(message, url)
+                return'''
+            
+            #logger.info(f"Message from {message.author} does not contain a command")
 
     # Create a task to get the response
     process_nlp_response = asyncio.create_task(parse_nlp_task(client, message))
 
     # Wait for the message to be processed
     await process_nlp_response
+
+def parse_command(message):
+    '''
+    Parses the message to see if it is a command for the bot
+    
+    Parameters:
+        message (discord.Message): The message sent to the bot
+        
+    Returns:
+        command (str): The command for the bot
+    '''
+    # Command list
+    commands = [
+        'play',
+        'pause',
+        'resume',
+        'skip',
+        'queue',
+        'clear',
+        'leave'
+    ]
+    
+    # Check if message content contains a command, if it does, return the command
+    for command in commands:
+        if command in message.content:
+            return command
 
 async def on_message_edit(client, before, after):
     '''
@@ -47,7 +114,7 @@ async def on_message_edit(client, before, after):
         return
     
     # Re-run the on_message function
-    on_message(client, after)
+    await on_message(client, after)
 
 async def parse_nlp_task(client, message, confidence_threshold=0.8):
     '''
@@ -61,6 +128,11 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     '''
     # Remove mentions from the message using a regex
     msg = re.sub(r'<@!?\d+>', '', message.content)
+
+    # Check if the message is empty or only contains whitespace
+    if msg.isspace() or len(msg) == 0:
+        logger.info("Message is empty or only contains whitespace")
+        return
 
     # Create a WitNlp object
     nlp = wit_api.WitNlp(msg)
