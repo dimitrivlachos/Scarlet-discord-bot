@@ -4,7 +4,7 @@ import re
 from utility.logger import logger
 # import utility.db_manager as db
 from functions import weather_api, wit_api, dice
-from functions.send import send_message
+from functions.send import send_nlp_message
 
 async def on_message(bot, message):
     '''
@@ -98,7 +98,7 @@ async def parse_nlp_task(bot, message, confidence_threshold=0.8):
         task = intent_config_data['function']
         max_typing_time = intent_config_data['max_typing_time']
         # Run the function
-        await send_message(bot, message, nlp, task, max_wait_time=max_typing_time)
+        await send_nlp_message(bot, message, nlp, task, max_wait_time=max_typing_time)
 
 
 
