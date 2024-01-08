@@ -43,6 +43,7 @@ class music_cog(commands.Cog):
             exp = r"v=([0-9A-Za-z_-]+)"
             match = re.search(exp, url)
             if match:
+                logger.info(f"Found url: {match.group(1)}")
                 urls.append(match.group(1))
         
         # Check if the url is a youtube video url
@@ -50,6 +51,7 @@ class music_cog(commands.Cog):
             exp = r"youtu.be/([0-9A-Za-z_-]+)"
             match = re.search(exp, url)
             if match:
+                logger.info(f"Found url: {match.group(1)}")
                 urls.append(match.group(1))
 
         # Check if the url is a youtube playlist url
@@ -57,6 +59,7 @@ class music_cog(commands.Cog):
             exp = r"list=([0-9A-Za-z_-]+)"
             match = re.search(exp, url)
             if match:
+                logger.info(f"Found playlist: {match.group(1)}")
                 urls = self.get_playlist_urls(match.group(1))
 
         # Add youtube.com to the start of each url
@@ -89,7 +92,7 @@ class music_cog(commands.Cog):
 
      #searching the item on youtube
     def search_yt(self, item):
-        logger.info(f"Parsing url: {item}")
+        logger.info(f"Searching item: {item}")
         urls = self.parse_url(item)
 
         data_list = []
@@ -183,17 +186,26 @@ class music_cog(commands.Cog):
         if self.is_paused:
             self.vc.resume()
         else:
-            song = self.search_yt(query)
-            if type(song) == type(True):
+            songs = self.search_yt(query)
+
+            if songs is None:
                 await send_message(ctx.channel, "I couldn't download the song :see_no_evil: Maybe the format isn't supported?") 
             else:
-                if self.is_playing:
-                    await ctx.send(f"**#{len(self.music_queue)+2} -'{song['title']}'** added to the queue")  
-                else:
-                    await ctx.send(f"**'{song['title']}'** added to the queue")  
-                self.music_queue.append([song, voice_channel])
-                if self.is_playing == False:
-                    await self.play_music(ctx)
+                message = ""
+                # Add each song to the queue
+                for song in songs:
+                    # Check if the bot is already playing
+                    if self.is_playing:
+                        message += f"**#{len(self.music_queue)+2} -'{song['title']}'** added to the queue\n"
+                    else:
+                        message += f"**'{song['title']}'** added to the queue\n"
+
+                    self.music_queue.append([song, voice_channel])
+                    
+                    if self.is_playing == False:
+                        await self.play_music(ctx)
+
+                await send_message(ctx.channel, message)
 
     @commands.command(name="pause", help="Pauses the current song being played")
     async def pause(self, ctx, *args):
