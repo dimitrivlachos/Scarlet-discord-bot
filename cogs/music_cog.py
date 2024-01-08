@@ -97,7 +97,6 @@ class music_cog(commands.Cog):
             return None
 
         data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
-        logger.info(f"Found {data['title']} on youtube")
         return data
     
 
