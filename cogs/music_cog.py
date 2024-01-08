@@ -16,23 +16,31 @@ class music_cog(commands.Cog):
         # 2d array containing [song, channel]
         self.music_queue = []
         self.YDL_OPTIONS = {'format': 'bestaudio/best'}
-        self.FFMPEG_OPTIONS = {'options': '-vn'}
+        self.FFMPEG_OPTIONS = {
+            'options': '-vn',
+            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
+            }
 
         self.vc = None
         self.ytdl = YoutubeDL(self.YDL_OPTIONS)
 
      #searching the item on youtube
     def search_yt(self, item):
+        logger.info(f"Searching youtube for {item}")
         try:
             info = self.ytdl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
         except Exception as e:
             logger.error(f"Error searching youtube: {e}")
             return None
 
-        return {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration']}
+        data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
+        logger.info(f"Found {data['title']} on youtube")
+        return data
     
 
     async def play_next(self):
+        logger.info("Playing next song")
+
         if len(self.music_queue) > 0:
             self.is_playing = True
 
@@ -46,24 +54,31 @@ class music_cog(commands.Cog):
             song = data['url']
             self.vc.play(discord.FFmpegPCMAudio(song, executable= "ffmpeg.exe", **self.FFMPEG_OPTIONS), after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(), self.bot.loop))
         else:
+            logger.info("play_next: No more songs in queue")
             self.is_playing = False
 
     # infinite loop checking 
     async def play_music(self, ctx):
+        logger.info("Playing music")
+
         if len(self.music_queue) > 0:
             self.is_playing = True
 
             m_url = self.music_queue[0][0]['source']
             #try to connect to voice channel if you are not already connected
             if self.vc == None or not self.vc.is_connected():
+                logger.info("Connecting to voice channel")
                 self.vc = await self.music_queue[0][1].connect()
 
                 #in case we fail to connect
                 if self.vc == None:
+                    logger.error("Failed to connect to voice channel")
                     await ctx.send("```Could not connect to the voice channel```")
                     return
             else:
+                logger.info("Moving to voice channel")
                 await self.vc.move_to(self.music_queue[0][1])
+
             #remove the first element as you are currently playing it
             self.music_queue.pop(0)
             loop = asyncio.get_event_loop()
@@ -72,14 +87,21 @@ class music_cog(commands.Cog):
             self.vc.play(discord.FFmpegPCMAudio(song, executable= "ffmpeg.exe", **self.FFMPEG_OPTIONS), after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(), self.bot.loop))
 
         else:
+            logger.info("play_music: No more songs in queue")
             self.is_playing = False
+            
 
     @commands.command(name="play", aliases=["p","playing"], help="Plays a selected song from youtube")
     async def play(self, ctx, *args):
         query = " ".join(args)
+
+        logger.info(f"Attempting to play {query}")
+
         try:
+            logger.info("Checking if user is in a voice channel")
             voice_channel = ctx.author.voice.channel
         except:
+            logger.error("User not in a voice channel")
             await ctx.send("```You need to connect to a voice channel first!```")
             return
         if self.is_paused:
@@ -99,6 +121,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name="pause", help="Pauses the current song being played")
     async def pause(self, ctx, *args):
+        logger.info("Pause called")
         if self.is_playing:
             self.is_playing = False
             self.is_paused = True
@@ -110,6 +133,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name = "resume", aliases=["r"], help="Resumes playing with the discord bot")
     async def resume(self, ctx, *args):
+        logger.info("Resume called")
         if self.is_paused:
             self.is_paused = False
             self.is_playing = True
@@ -117,6 +141,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name="skip", aliases=["s"], help="Skips the current song being played")
     async def skip(self, ctx):
+        logger.info("Skip called")
         if self.vc != None and self.vc:
             self.vc.stop()
             #try to play next in the queue if it exists
@@ -125,6 +150,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name="queue", aliases=["q"], help="Displays the current songs in queue")
     async def queue(self, ctx):
+        logger.info("Queue requested")
         retval = ""
         for i in range(0, len(self.music_queue)):
             retval += f"#{i+1} -" + self.music_queue[i][0]['title'] + "\n"
@@ -136,6 +162,7 @@ class music_cog(commands.Cog):
 
     @commands.command(name="clear", aliases=["c", "bin"], help="Stops the music and clears the queue")
     async def clear(self, ctx):
+        logger.info("Clear called")
         if self.vc != None and self.is_playing:
             self.vc.stop()
         self.music_queue = []
@@ -143,11 +170,13 @@ class music_cog(commands.Cog):
 
     @commands.command(name="stop", aliases=["disconnect", "l", "d"], help="Kick the bot from VC")
     async def dc(self, ctx):
+        logger.info("Disconnect called")
         self.is_playing = False
         self.is_paused = False
         await self.vc.disconnect()
     
     @commands.command(name="remove", help="Removes last song added to queue")
     async def re(self, ctx):
+        logger.info("Remove called")
         self.music_queue.pop()
         await ctx.send("```last song removed```")
