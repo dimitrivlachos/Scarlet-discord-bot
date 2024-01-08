@@ -45,7 +45,7 @@ async def send_nlp_message(message, nlp, task, minimum_wait_time='auto', max_wai
     # Send the response
     await message.channel.send(response)
 
-async def send_message(channel, response, minimum_wait_time='auto', max_wait_time=1.5):
+async def send_message(channel, message, minimum_wait_time='auto', max_wait_time=1.5):
     '''
     Sends a message to the channel the message was sent in
     
@@ -57,7 +57,7 @@ async def send_message(channel, response, minimum_wait_time='auto', max_wait_tim
         
     Returns:
         None'''
-    logger.info(f"Sending message: {response}")
+    logger.info(f"Sending message: {message}")
     # We also send a typing indicator so the user knows the bot is working on the response
     # This is done asynchronously, so the request can be processed while the typing indicator is being shown
     # Get the current time
@@ -65,7 +65,7 @@ async def send_message(channel, response, minimum_wait_time='auto', max_wait_tim
     async with channel.typing():
         if minimum_wait_time == 'auto':
             # Calculate the minimum wait time based on the number of words in the response
-            minimum_wait_time = typing_time(response)
+            minimum_wait_time = typing_time(message)
             # If the minimum wait time is greater than the maximum wait time, set the minimum wait time to the maximum wait time
             if minimum_wait_time > max_wait_time:
                 minimum_wait_time = max_wait_time
@@ -78,7 +78,7 @@ async def send_message(channel, response, minimum_wait_time='auto', max_wait_tim
             await asyncio.sleep(time_remaining)
 
     # Send the response
-    await channel.send(response)
+    await channel.send(message)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # Helper functions
