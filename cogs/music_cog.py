@@ -89,15 +89,29 @@ class music_cog(commands.Cog):
 
      #searching the item on youtube
     def search_yt(self, item):
-        logger.info(f"Searching youtube for {item}")
-        try:
-            info = self.ytdl.extract_info(f"ytsearch:{item}", download=False)['entries'][0]
-        except Exception as e:
-            logger.error(f"Error searching youtube: {e}")
-            return None
+        logger.info(f"Parsing url: {item}")
+        urls = self.parse_url(item)
 
-        data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
-        return data
+        data_list = []
+
+        # Check if the url is a playlist
+        if len(urls) > 1:
+            logger.info("Playlist detected")
+
+        for url in urls:
+            try:
+                info = self.ytdl.extract_info(url, download=False)
+            except Exception as e:
+                logger.error(f"Error searching youtube: {e}")
+
+            data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
+            data_list.append(data)
+
+        # Check if data_list is empty
+        if len(data_list) == 0:
+            return None
+        else:
+            return data_list
     
 
     async def play_next(self):
@@ -153,11 +167,11 @@ class music_cog(commands.Cog):
             self.is_playing = False
             
 
-    @commands.command(name="play", aliases=["p","playing"], help="Plays a selected song from youtube")
+    @commands.command(name="play", aliases=["p","playing", "a", "add"], help="Plays a selected song from youtube")
     async def play(self, ctx, *args):
         query = " ".join(args)
 
-        logger.info(f"Attempting to play {query}")
+        logger.info(f"Attempting to add {query}")
 
         try:
             logger.info("Checking if user is in a voice channel")
@@ -171,7 +185,7 @@ class music_cog(commands.Cog):
         else:
             song = self.search_yt(query)
             if type(song) == type(True):
-                await ctx.send("```Could not download the song. Incorrect format try another keyword. This could be due to playlist or a livestream format.```")
+                await send_message(ctx.channel, "I couldn't download the song :see_no_evil: Maybe the format isn't supported?") 
             else:
                 if self.is_playing:
                     await ctx.send(f"**#{len(self.music_queue)+2} -'{song['title']}'** added to the queue")  
