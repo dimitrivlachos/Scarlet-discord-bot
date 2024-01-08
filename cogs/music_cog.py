@@ -36,7 +36,7 @@ class music_cog(commands.Cog):
         '''
         logger.info(f"Parsing url: {url}")
 
-        urls = []
+        ids = []
 
         # Check if the url is a youtube url
         if "youtube.com/watch?" in url:
@@ -44,7 +44,7 @@ class music_cog(commands.Cog):
             match = re.search(exp, url)
             if match:
                 logger.info(f"Found url: {match.group(1)}")
-                urls.append(match.group(1))
+                ids.append(match.group(1))
         
         # Check if the url is a youtube video url
         elif "youtu.be/" in url:
@@ -52,7 +52,7 @@ class music_cog(commands.Cog):
             match = re.search(exp, url)
             if match:
                 logger.info(f"Found url: {match.group(1)}")
-                urls.append(match.group(1))
+                ids.append(match.group(1))
 
         # Check if the url is a youtube playlist url
         elif "youtube.com/playlist?" in url:
@@ -60,13 +60,14 @@ class music_cog(commands.Cog):
             match = re.search(exp, url)
             if match:
                 logger.info(f"Found playlist: {match.group(1)}")
-                urls = self.get_playlist_urls(match.group(1))
+                ids = self.get_playlist_urls(match.group(1))
 
         # Add youtube.com to the start of each url
-        for i in range(0, len(urls)):
-            urls[i] = "https://www.youtube.com/watch?v=" + urls[i]
+        for i in range(0, len(ids)):
+            # Check if the url already has youtube.com in it
+            ids[i] = "https://www.youtube.com/watch?v=" + ids[i]
 
-        return urls
+        return ids
     
     def get_playlist_urls(self, playlist_id):
         '''Gets the urls from a youtube playlist
@@ -81,14 +82,29 @@ class music_cog(commands.Cog):
 
         urls = []
 
-        # Get the playlist info
-        playlist_info = self.ytdl.extract_info(f"https://www.youtube.com/playlist?list={playlist_id}", download=False)
+        try:
+            playlist_info = self.ytdl.extract_info(f"https://www.youtube.com/playlist?list={playlist_id}", download=False)
+            
+            if 'entries' in playlist_info:
+                for video in playlist_info['entries']:
+                    if 'webpage_url' in video:
+                        urls.append(video['webpage_url'])
 
-        # Get the urls from the playlist
-        for video in playlist_info['entries']:
-            urls.append(video['url'])
+        except Exception as e:
+            logger.error(f"Error getting playlist urls: {e}")
 
-        return urls
+        logger.info(f"Found {len(urls)} urls")
+        logger.info(f"Playlist urls: {urls}")
+
+        # Extract the ids from the urls
+        ids = []
+        for url in urls:
+            exp = r"v=([0-9A-Za-z_-]+)"
+            match = re.search(exp, url)
+            if match:
+                ids.append(match.group(1))
+
+        return ids
 
      #searching the item on youtube
     def search_yt(self, item):
