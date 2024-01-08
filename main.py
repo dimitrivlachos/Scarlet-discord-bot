@@ -21,7 +21,7 @@ async def on_ready():
 # Handles messages sent to the bot
 @bot.event
 async def on_message(message):
-    print(message.content)
+    logger.info(f"Message from <{message.author}>: {message.content}")
     # Check if first character is the prefix
     if message.content[0] != prefix:
         await discord_on_message.on_message(bot, message)
