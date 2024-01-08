@@ -6,7 +6,7 @@ import utility.db_manager as db
 from functions import weather_api, wit_api, dice
 from functions.send import send_message
 
-async def on_message(client, message):
+async def on_message(bot, message):
     '''
     Handles messages sent to the bot
     
@@ -18,7 +18,7 @@ async def on_message(client, message):
         None
     '''
     # Ignore messages sent by the bot itself
-    if message.author == client.user:
+    if message.author == bot.user:
         return
     
     # Ignore messages sent by other bots
@@ -26,23 +26,23 @@ async def on_message(client, message):
         return
 
     # Create a task to get the response
-    process_nlp_response = asyncio.create_task(parse_nlp_task(client, message))
+    process_nlp_response = asyncio.create_task(parse_nlp_task(bot, message))
 
     # Wait for the message to be processed
     await process_nlp_response
 
-async def on_message_edit(client, before, after):
+async def on_message_edit(bot, before, after):
     '''
     Handles messages edited by the user
     '''
     # Ignore messages sent by the bot itself
-    if before.author == client.user:
+    if before.author == bot.user:
         return
     
     # Re-run the on_message function
-    await on_message(client, after)
+    await on_message(bot, after)
 
-async def parse_nlp_task(client, message, confidence_threshold=0.8):
+async def parse_nlp_task(bot, message, confidence_threshold=0.8):
     '''
     Parses the message and returns the response
 
@@ -102,7 +102,7 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
         task = intent_config_data['function']
         max_typing_time = intent_config_data['max_typing_time']
         # Run the function
-        await send_message(client, message, nlp, task, max_wait_time=max_typing_time)
+        await send_message(bot, message, nlp, task, max_wait_time=max_typing_time)
 
 
 
