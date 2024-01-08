@@ -2,7 +2,7 @@ import discord
 import asyncio
 import re
 from utility.logger import logger
-import utility.db_manager as db
+# import utility.db_manager as db
 from functions import weather_api, wit_api, dice
 from functions.send import send_message
 
