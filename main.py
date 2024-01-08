@@ -7,9 +7,11 @@ from discord_events import discord_on_ready
 from discord_events import discord_on_message
 from cogs.music_cog import music_cog
 
+prefix = '!'
+
 # Create the bot client
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix='&', intents=intents)
+bot = commands.Bot(command_prefix=prefix, intents=intents)
 
 # Handles the bot being ready
 @bot.event
@@ -19,20 +21,17 @@ async def on_ready():
 # Handles messages sent to the bot
 @bot.event
 async def on_message(message):
-    print("Message received")
     print(message.content)
-    print("Message content printed")
-    await discord_on_message.on_message(bot, message)
-    print("Message processed")
+    # Check if first character is the prefix
+    if message.content[0] != prefix:
+        await discord_on_message.on_message(bot, message)
+    
+    # Process commands
     await bot.process_commands(message)
-    print("Message commands processed")
 
 @bot.event
 async def on_message_edit(before, after):
     await discord_on_message.on_message_edit(bot, before, after)
-
-# Run the bot
-#client.run(DISCORD_TOKEN)
 
 async def main():
     async with bot:
