@@ -1,8 +1,10 @@
 import discord
 import asyncio
+import re
 from discord.ext import commands
 from yt_dlp import YoutubeDL
 from utility.logger import logger
+from functions.send import send_message
 
 class music_cog(commands.Cog):
     def __init__(self, bot):
@@ -22,6 +24,68 @@ class music_cog(commands.Cog):
 
         self.vc = None
         self.ytdl = YoutubeDL(self.YDL_OPTIONS)
+
+    def parse_url(self, url):
+        '''Extracts the relevant information from yotube the url using a regular expression
+        
+        Parameters:
+            url (str): The url to parse
+            
+            Returns:
+                urls (list): A list of urls
+        '''
+        logger.info(f"Parsing url: {url}")
+
+        urls = []
+
+        # Check if the url is a youtube url
+        if "youtube.com/watch?" in url:
+            exp = r"v=([0-9A-Za-z_-]+)"
+            match = re.search(exp, url)
+            if match:
+                urls.append(match.group(1))
+        
+        # Check if the url is a youtube video url
+        elif "youtu.be/" in url:
+            exp = r"youtu.be/([0-9A-Za-z_-]+)"
+            match = re.search(exp, url)
+            if match:
+                urls.append(match.group(1))
+
+        # Check if the url is a youtube playlist url
+        elif "youtube.com/playlist?" in url:
+            exp = r"list=([0-9A-Za-z_-]+)"
+            match = re.search(exp, url)
+            if match:
+                urls = self.get_playlist_urls(match.group(1))
+
+        # Add youtube.com to the start of each url
+        for i in range(0, len(urls)):
+            urls[i] = "https://www.youtube.com/watch?v=" + urls[i]
+
+        return urls
+    
+    def get_playlist_urls(self, playlist_id):
+        '''Gets the urls from a youtube playlist
+        
+        Parameters:
+            playlist_id (str): The id of the playlist
+            
+        Returns:
+            urls (list): A list of urls
+        '''
+        logger.info(f"Getting playlist urls for {playlist_id}")
+
+        urls = []
+
+        # Get the playlist info
+        playlist_info = self.ytdl.extract_info(f"https://www.youtube.com/playlist?list={playlist_id}", download=False)
+
+        # Get the urls from the playlist
+        for video in playlist_info['entries']:
+            urls.append(video['url'])
+
+        return urls
 
      #searching the item on youtube
     def search_yt(self, item):
