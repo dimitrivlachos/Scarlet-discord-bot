@@ -107,7 +107,7 @@ class music_cog(commands.Cog):
         return ids
 
      #searching the item on youtube
-    def search_yt(self, item):
+    async def search_yt(self, ctx, item):
         logger.info(f"Searching item: {item}")
         urls = self.parse_url(item)
 
@@ -116,6 +116,8 @@ class music_cog(commands.Cog):
         # Check if the url is a playlist
         if len(urls) > 1:
             logger.info("Playlist detected")
+            # Create a task to send the playlist message
+            send_playlist_message = asyncio.create_task(send_message(ctx.channel, "I'm downloading the playlist, this might take a while :sweat_smile:"))
 
         for url in urls:
             try:
@@ -125,6 +127,10 @@ class music_cog(commands.Cog):
 
             data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
             data_list.append(data)
+        
+        # Wait for the playlist message to be sent
+        if len(urls) > 1:
+            await send_playlist_message
 
         # Check if data_list is empty
         if len(data_list) == 0:
@@ -132,7 +138,6 @@ class music_cog(commands.Cog):
         else:
             return data_list
     
-
     async def play_next(self):
         logger.info("Playing next song")
 
@@ -184,7 +189,6 @@ class music_cog(commands.Cog):
         else:
             logger.info("play_music: No more songs in queue")
             self.is_playing = False
-            
 
     @commands.command(name="play", aliases=["p","playing", "a", "add"], help="Plays a selected song from youtube")
     async def play(self, ctx, *args):
@@ -202,26 +206,39 @@ class music_cog(commands.Cog):
         if self.is_paused:
             self.vc.resume()
         else:
-            songs = self.search_yt(query)
+            songs = await self.search_yt(ctx, query)
 
             if songs is None:
                 await send_message(ctx.channel, "I couldn't download the song :see_no_evil: Maybe the format isn't supported?") 
             else:
-                message = ""
-                # Add each song to the queue
-                for song in songs:
+                embeds = []
+                # Loop through each song in songs
+                for i, song in enumerate(songs):
+                    # Create an embed for each song
+                    embed = discord.Embed(color=discord.Color.red())
+
                     # Check if the bot is already playing
                     if self.is_playing:
-                        message += f"**#{len(self.music_queue)+2} -'{song['title']}'** added to the queue\n"
+                        embed.title = f"#{len(self.music_queue) + 2} - '{song['title']}'"
                     else:
-                        message += f"**'{song['title']}'** added to the queue\n"
+                        embed.title = f"'{song['title']}'"
 
+                    embed.description = "Added to the queue"
+                    
+                    # Set the thumbnail, assuming the song dictionary has a 'thumbnail' key
+                    embed.set_thumbnail(url=song['thumbnail'])
+
+                    # Add the song to the music queue
                     self.music_queue.append([song, voice_channel])
                     
-                    if self.is_playing == False:
+                    # Play music if the bot is not already playing
+                    if not self.is_playing:
                         await self.play_music(ctx)
 
-                await send_message(ctx.channel, message)
+                    if i < 5:
+                        await ctx.send(embed=embed)
+                    elif i == 5:
+                        embeds.append(discord.Embed(color=discord.Color.red(), title="There are more songs, but I'm not going to show them all :sweat_smile:"))
 
     @commands.command(name="pause", help="Pauses the current song being played")
     async def pause(self, ctx, *args):
@@ -250,7 +267,6 @@ class music_cog(commands.Cog):
             self.vc.stop()
             #try to play next in the queue if it exists
             await self.play_music(ctx)
-
 
     @commands.command(name="queue", aliases=["q"], help="Displays the current songs in queue")
     async def queue(self, ctx):
