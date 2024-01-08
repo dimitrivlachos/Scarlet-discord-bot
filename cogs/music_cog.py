@@ -168,7 +168,7 @@ class music_cog(commands.Cog):
                 #in case we fail to connect
                 if self.vc == None:
                     logger.error("Failed to connect to voice channel")
-                    await ctx.send("```Could not connect to the voice channel```")
+                    await send_message(ctx.channel, "I couldn't connect to the voice channel :sad:")
                     return
             else:
                 logger.info("Moving to voice channel")
@@ -197,7 +197,7 @@ class music_cog(commands.Cog):
             voice_channel = ctx.author.voice.channel
         except:
             logger.error("User not in a voice channel")
-            await ctx.send("```You need to connect to a voice channel first!```")
+            await send_message(ctx.channel, "You need to be in a voice channel to use this command, how else am I supposed to play music for you?")
             return
         if self.is_paused:
             self.vc.resume()
