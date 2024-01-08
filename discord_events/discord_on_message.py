@@ -83,10 +83,6 @@ async def parse_nlp_task(bot, message, confidence_threshold=0.8):
         'roll_dice': {
             'function': roll_dice,
             'max_typing_time': 0.5
-        },
-        'got_sick': {
-            'function': respond_sick,
-            'max_typing_time': 10
         }
     }
 
@@ -162,19 +158,4 @@ async def roll_dice(nlp):
     result = f"Rolling {number_of_dice}d{number_of_sides}\n{roll_results} = {sum(roll_results)}"
 
     return result
-
-async def respond_sick(nlp):
-    '''
-    Returns a response to the user being sick
-    
-    Parameters:
-        nlp (WitNlp): The WitNlp object
-        
-    Returns:
-        response (str): The response
-    '''
-    # Get a random response from a database
-    response = db.get_random_response('sick_responses')
-
-    return response
 
