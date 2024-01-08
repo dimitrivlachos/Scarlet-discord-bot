@@ -1,8 +1,7 @@
-from ast import alias
 import discord
+import asyncio
 from discord.ext import commands
 from yt_dlp import YoutubeDL
-import asyncio
 from utility.logger import logger
 
 class music_cog(commands.Cog):
