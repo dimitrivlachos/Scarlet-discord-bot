@@ -10,11 +10,14 @@ class ColouredFormatter(logging.Formatter):
         logging.CRITICAL: "\033[1;31m" # Bright Red for CRITICAL
     }
     RESET = "\033[0m"
+    BOLD = "\033[1m"
 
     def format(self, record):
         colour = getattr(record, 'colour', self.LEVEL_COLOURS.get(record.levelno))
+        bold = getattr(record, 'bold', False)
+        bold_format = self.BOLD if bold else ""
         message = super().format(record)
-        return f"{colour}{message}{self.RESET}"
+        return f"{colour}{bold_format}{message}{self.RESET}"
 
 # Logger setup (same as before)
 logger = logging.getLogger(__name__)
@@ -41,3 +44,4 @@ if __name__ == '__main__':
     logger.error("Standard error message")
     logger.critical("Standard critical message")
     logger.log(logging.INFO, "Custom coloured message", extra={'colour': "\033[0;35m"})  # Magenta colour
+    logger.log(logging.INFO, "Starting bot...", extra={'colour': "\033[0;35m", 'bold': True})  # Bold Magenta colour
