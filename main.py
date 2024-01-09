@@ -8,7 +8,7 @@ from discord_events import discord_on_message
 from cogs.help_cog import help_cog
 from cogs.music_cog import music_cog
 
-logger.log(logging.INFO, "Starting bot...", extra={'colour': "\033[0;35m"})
+logger.log(logging.INFO, "Starting bot...", extra={'colour': "\033[0;35m", 'bold': True})
 
 prefix = '!'
 
