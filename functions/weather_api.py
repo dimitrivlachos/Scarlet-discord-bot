@@ -1,4 +1,5 @@
 import requests
+from functions.unit_conversion import *
 from utility.tokens import WEATHER_API_KEY
 from utility.logger import logger
 
@@ -36,14 +37,16 @@ async def get_weather(city, retries=3):
 
     # Get temperature in Celsius
     temp = weather_data['main']['temp']
-    temp_celsius = round(temp - 273.15)
+    temp_celsius = kelvin_to_celsius(temp)
+    temp_fahrenheit = kelvin_to_fahrenheit(temp)
 
     # Get wind speed in km/h
     wind = weather_data['wind']['speed']
-    wind_kmh = round(wind * 3.6)
+    wind_kmh = metres_per_sec_to_kmh(wind)
+    wind_mph = metres_per_sec_to_mph(wind)
 
     # Format weather message
-    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C, with winds of {wind_kmh} km/h'
+    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C / {temp_fahrenheit}°F, with winds of {wind_kmh} km/h / {wind_mph} mph'
     logger.info(f"Weather received: {weather}")
 
     return weather
