@@ -107,7 +107,7 @@ class music_cog(commands.Cog):
         return ids
 
      #searching the item on youtube
-    async def search_yt(self, ctx, item):
+    def search_yt(self, ctx, item):
         logger.info(f"Searching item: {item}")
         urls = self.parse_url(item)
 
@@ -116,8 +116,6 @@ class music_cog(commands.Cog):
         # Check if the url is a playlist
         if len(urls) > 1:
             logger.info("Playlist detected")
-            # Create a task to send the playlist message
-            send_playlist_message = asyncio.create_task(send_message(ctx.channel, "I'm downloading the playlist, this might take a while :sweat_smile:"))
 
         for url in urls:
             try:
@@ -127,10 +125,6 @@ class music_cog(commands.Cog):
 
             data = {'source': info['url'], 'title': info['title'], 'thumbnail': info['thumbnail'], 'duration': info['duration'], 'thumbnail': info['thumbnail']}
             data_list.append(data)
-        
-        # Wait for the playlist message to be sent
-        if len(urls) > 1:
-            await send_playlist_message
 
         # Check if data_list is empty
         if len(data_list) == 0:
@@ -206,7 +200,12 @@ class music_cog(commands.Cog):
         if self.is_paused:
             self.vc.resume()
         else:
-            songs = await self.search_yt(ctx, query)
+            # Check if the message contains the word playlist
+            if "playlist" in query:
+                logger.info("Playlist detected")
+                await send_message(ctx.channel, "I am downloading the playlist, this may take a little bit...", max_wait_time=1.5)
+
+            songs = self.search_yt(ctx, query)
 
             if songs is None:
                 await send_message(ctx.channel, "I couldn't download the song :see_no_evil: Maybe the format isn't supported?") 
@@ -240,6 +239,9 @@ class music_cog(commands.Cog):
                     elif i == 5:
                         embeds.append(discord.Embed(color=discord.Color.red(), title="There are more songs, but I'm not going to show them all :sweat_smile:"))
 
+                # Delete the original message
+                await ctx.message.delete()
+
     @commands.command(name="pause", help="Pauses the current song being played")
     async def pause(self, ctx, *args):
         logger.info("Pause called")
@@ -271,14 +273,18 @@ class music_cog(commands.Cog):
     @commands.command(name="queue", aliases=["q"], help="Displays the current songs in queue")
     async def queue(self, ctx):
         logger.info("Queue requested")
-        retval = ""
-        for i in range(0, len(self.music_queue)):
-            retval += f"#{i+1} -" + self.music_queue[i][0]['title'] + "\n"
 
-        if retval != "":
-            await ctx.send(f"```queue:\n{retval}```")
-        else:
-            await ctx.send("```No music in queue```")
+        if len(self.music_queue) == 0:
+            await ctx.send("No music in queue")
+            return
+
+        embed = discord.Embed(title="Music Queue", color=discord.Color.blue())
+        
+        for i, song_info in enumerate(self.music_queue):
+            song_title = song_info[0]['title']
+            embed.add_field(name=f"#{i + 1}", value=song_title, inline=False)
+
+        await ctx.send(embed=embed)
 
     @commands.command(name="clear", aliases=["c", "bin"], help="Stops the music and clears the queue")
     async def clear(self, ctx):
