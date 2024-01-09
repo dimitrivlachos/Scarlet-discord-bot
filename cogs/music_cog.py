@@ -203,7 +203,7 @@ class music_cog(commands.Cog):
             # Check if the message contains the word playlist
             if "playlist" in query:
                 logger.info("Playlist detected")
-                await send_message(ctx.channel, "I am downloading the playlist, this may take a little bit...", max_wait_time=1.5)
+                download_notification = await send_message(ctx.channel, "I am downloading the playlist, this may take a little bit...", max_wait_time=1.5)
 
             songs = self.search_yt(ctx, query)
 
@@ -234,7 +234,11 @@ class music_cog(commands.Cog):
 
                 # Delete the message that triggered the command
                 await ctx.message.delete()
-                
+
+                # Check if download_notification exists
+                if "download_notification" in locals():
+                    await download_notification.delete()
+
                 # Send the embed
                 await ctx.send(embed=embed)
 
