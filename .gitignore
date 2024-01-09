@@ -7,6 +7,9 @@ backup/
 # Test files
 _test/
 
+# Backup files
+backup/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

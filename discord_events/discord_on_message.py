@@ -2,12 +2,11 @@ import discord
 import asyncio
 import re
 from utility.logger import logger
-import utility.db_manager as db
-from utility.tokens import BOT_ID
+# import utility.db_manager as db
 from functions import weather_api, wit_api, dice
-from functions.send import send_message
+from functions.send import send_nlp_message
 
-async def on_message(client, message):
+async def on_message(bot, message):
     '''
     Handles messages sent to the bot
     
@@ -19,37 +18,31 @@ async def on_message(client, message):
         None
     '''
     # Ignore messages sent by the bot itself
-    if message.author == client.user:
+    if message.author == bot.user:
         return
     
     # Ignore messages sent by other bots
     if message.author.bot:
         return
-    
-    # Check if the message uses the bot's prefix
-    # If the message contains the bot's ID, it is a direct message
-    if len(message.mentions) > 0:
-        if BOT_ID in message.mentions:
-            logger.info(f"Message from {message.author} is a direct message")
 
     # Create a task to get the response
-    process_nlp_response = asyncio.create_task(parse_nlp_task(client, message))
+    process_nlp_response = asyncio.create_task(parse_nlp_task(bot, message))
 
     # Wait for the message to be processed
     await process_nlp_response
 
-async def on_message_edit(client, before, after):
+async def on_message_edit(bot, before, after):
     '''
     Handles messages edited by the user
     '''
     # Ignore messages sent by the bot itself
-    if before.author == client.user:
+    if before.author == bot.user:
         return
     
     # Re-run the on_message function
-    on_message(client, after)
+    await on_message(bot, after)
 
-async def parse_nlp_task(client, message, confidence_threshold=0.8):
+async def parse_nlp_task(bot, message, confidence_threshold=0.8):
     '''
     Parses the message and returns the response
 
@@ -61,6 +54,11 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
     '''
     # Remove mentions from the message using a regex
     msg = re.sub(r'<@!?\d+>', '', message.content)
+
+    # Check if the message is empty or only contains whitespace
+    if msg.isspace() or len(msg) == 0:
+        logger.info("Message is empty or only contains whitespace")
+        return
 
     # Create a WitNlp object
     nlp = wit_api.WitNlp(msg)
@@ -85,10 +83,6 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
         'roll_dice': {
             'function': roll_dice,
             'max_typing_time': 0.5
-        },
-        'got_sick': {
-            'function': respond_sick,
-            'max_typing_time': 10
         }
     }
 
@@ -104,7 +98,7 @@ async def parse_nlp_task(client, message, confidence_threshold=0.8):
         task = intent_config_data['function']
         max_typing_time = intent_config_data['max_typing_time']
         # Run the function
-        await send_message(client, message, nlp, task, max_wait_time=max_typing_time)
+        await send_nlp_message(message, nlp, task, max_wait_time=max_typing_time)
 
 
 
@@ -164,19 +158,4 @@ async def roll_dice(nlp):
     result = f"Rolling {number_of_dice}d{number_of_sides}\n{roll_results} = {sum(roll_results)}"
 
     return result
-
-async def respond_sick(nlp):
-    '''
-    Returns a response to the user being sick
-    
-    Parameters:
-        nlp (WitNlp): The WitNlp object
-        
-    Returns:
-        response (str): The response
-    '''
-    # Get a random response from a database
-    response = db.get_random_response('sick_responses')
-
-    return response
 
