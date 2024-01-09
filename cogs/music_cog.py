@@ -275,14 +275,18 @@ class music_cog(commands.Cog):
         logger.info("Queue requested")
 
         if len(self.music_queue) == 0:
-            await ctx.send("No music in queue")
+            await send_message(ctx.channel, "There are no songs in the queue!")
             return
 
-        embed = discord.Embed(title="Music Queue", color=discord.Color.blue())
+        embed = discord.Embed(title="Music Queue", color=discord.Color.red())
         
         for i, song_info in enumerate(self.music_queue):
             song_title = song_info[0]['title']
             embed.add_field(name=f"#{i + 1}", value=song_title, inline=False)
+
+            if i == 5:
+                embed.add_field(name="...", value="There are more songs, but I'm not going to show them all :see_no_evil:", inline=False)
+                break
 
         await ctx.send(embed=embed)
 
