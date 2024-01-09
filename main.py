@@ -2,10 +2,13 @@ import discord
 from discord.ext import commands
 import asyncio
 from utility.tokens import DISCORD_TOKEN
-from utility.logger import logger
+from utility.logger import logger, logging
 from discord_events import discord_on_ready
 from discord_events import discord_on_message
+from cogs.help_cog import help_cog
 from cogs.music_cog import music_cog
+
+logger.log(logging.INFO, "Starting bot...", extra={'colour': "\033[0;35m"})
 
 prefix = '!'
 
@@ -30,13 +33,17 @@ async def on_message(message):
     else:
         # Handle non-command messages
         await discord_on_message.on_message(bot, message)
-        
+
 @bot.event
 async def on_message_edit(before, after):
     await discord_on_message.on_message_edit(bot, before, after)
 
+# Remove the default help command
+bot.remove_command('help')
+
 async def main():
     async with bot:
+        await bot.add_cog(help_cog(bot))
         await bot.add_cog(music_cog(bot))
         await bot.start(DISCORD_TOKEN)
 
