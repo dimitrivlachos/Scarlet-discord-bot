@@ -1,28 +1,50 @@
 import discord
+from discord.ext import commands
+import asyncio
 from utility.tokens import DISCORD_TOKEN
-from utility.logger import logger
+from utility.logger import logger, logging
 from discord_events import discord_on_ready
 from discord_events import discord_on_message
+from cogs.help_cog import help_cog
+from cogs.music_cog import music_cog
+
+logger.log(logging.INFO, "Starting bot...", extra={'colour': "\033[0;35m", 'bold': True})
+
+prefix = '!'
 
 # Create the bot client
 intents = discord.Intents.all()
-#intents.members = True
-client = discord.Client(intents=intents)#, activity=discord.Game(name="with your feelings"))
+bot = commands.Bot(command_prefix=prefix, intents=intents)
 
 # Handles the bot being ready
-@client.event
+@bot.event
 async def on_ready():
-    await discord_on_ready.on_ready(client)
+    await discord_on_ready.on_ready(bot)
 
 # Handles messages sent to the bot
-@client.event
+@bot.event
 async def on_message(message):
-    print(message.content)
-    await discord_on_message.on_message(client, message)
+    logger.info(f"Message from <{message.author}>: {message.content}")
 
-@client.event
+    # Check if the message is a command (starts with the prefix)
+    if message.content.startswith(prefix):
+        # Process the command
+        await bot.process_commands(message)
+    else:
+        # Handle non-command messages
+        await discord_on_message.on_message(bot, message)
+
+@bot.event
 async def on_message_edit(before, after):
-    await discord_on_message.on_message_edit(client, before, after)
+    await discord_on_message.on_message_edit(bot, before, after)
 
-# Run the bot
-client.run(DISCORD_TOKEN)
+# Remove the default help command
+bot.remove_command('help')
+
+async def main():
+    async with bot:
+        await bot.add_cog(help_cog(bot))
+        await bot.add_cog(music_cog(bot))
+        await bot.start(DISCORD_TOKEN)
+
+asyncio.run(main())

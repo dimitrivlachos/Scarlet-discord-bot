@@ -3,12 +3,11 @@ import asyncio
 from time import time
 from utility.logger import logger
 
-async def send_message(client, message, nlp, task, minimum_wait_time='auto', max_wait_time=1.5):
+async def send_nlp_message(message, nlp, task, minimum_wait_time='auto', max_wait_time=1.5):
     '''
     Sends a message to the channel the message was sent in
     
     Parameters:
-        client (discord.Client): The Discord client
         message (discord.Message): The message to send the response to
         nlp (WitNlp): The WitNlp object
         task (asyncio.Task): The task to get the response
@@ -16,7 +15,8 @@ async def send_message(client, message, nlp, task, minimum_wait_time='auto', max
         max_wait_time (float): The maximum time to wait before sending the response (default: 1.5)
         
     Returns:
-        None'''
+        message (discord.Message): The message that was sent
+    '''
     logger.info(f"'Typing' message with task: {task}")
     # Create a task to get the response
     message_task = asyncio.create_task(task(nlp))
@@ -43,8 +43,44 @@ async def send_message(client, message, nlp, task, minimum_wait_time='auto', max
             logger.info(f"'Typing' for {time_remaining} more seconds...")
             await asyncio.sleep(time_remaining)
 
+    # Send the response and return the message
+    return await message.channel.send(response)
+
+async def send_message(channel, message, minimum_wait_time='auto', max_wait_time=1.5):
+    '''
+    Sends a message to the channel the message was sent in
+    
+    Parameters:
+        message (discord.Message): The message to send the response to
+        response (str): The response to send
+        minimum_wait_time (float): The minimum time to wait before sending the response (default: 'auto')
+        max_wait_time (float): The maximum time to wait before sending the response (default: 1.5)
+        
+    Returns:
+        message (discord.Message): The message that was sent
+    '''
+    logger.info(f"Sending message: {message}")
+    # We also send a typing indicator so the user knows the bot is working on the response
+    # This is done asynchronously, so the request can be processed while the typing indicator is being shown
+    # Get the current time
+    start_time = time()
+    async with channel.typing():
+        if minimum_wait_time == 'auto':
+            # Calculate the minimum wait time based on the number of words in the response
+            minimum_wait_time = typing_time(message)
+            # If the minimum wait time is greater than the maximum wait time, set the minimum wait time to the maximum wait time
+            if minimum_wait_time > max_wait_time:
+                minimum_wait_time = max_wait_time
+
+        # Calculate the time remaining
+        time_remaining = minimum_wait_time - (time() - start_time)
+        # If the time remaining is greater than 0, wait for the remaining time
+        if time_remaining > 0:
+            logger.info(f"'Typing' for {time_remaining} more seconds...")
+            await asyncio.sleep(time_remaining)
+
     # Send the response
-    await message.channel.send(response)
+    return await channel.send(message)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
 # Helper functions
