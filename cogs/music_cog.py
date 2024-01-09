@@ -187,7 +187,7 @@ class music_cog(commands.Cog):
     @commands.command(name="play", aliases=["p","playing", "a", "add"], help="Plays a selected song from youtube")
     async def play(self, ctx, *args):
         query = " ".join(args)
-
+        
         logger.info(f"Attempting to add {query}")
 
         try:
@@ -208,22 +208,20 @@ class music_cog(commands.Cog):
             songs = self.search_yt(ctx, query)
 
             if songs is None:
-                await send_message(ctx.channel, "I couldn't download the song :see_no_evil: Maybe the format isn't supported?") 
+                await send_message(ctx.channel, "I couldn't download the song :pensive: Maybe the format isn't supported?") 
             else:
-                embeds = []
+                embed = discord.Embed(title="Added to queue", color=discord.Color.red())
                 # Loop through each song in songs
                 for i, song in enumerate(songs):
-                    # Create an embed for each song
-                    embed = discord.Embed(color=discord.Color.red())
-
                     # Check if the bot is already playing
-                    if self.is_playing:
-                        embed.title = f"#{len(self.music_queue) + 2} - '{song['title']}'"
-                    else:
-                        embed.title = f"'{song['title']}'"
+                    if i < 5:
+                        if self.is_playing:
+                            embed.add_field(name=f"#{len(self.music_queue) + 2}", value=f"'{song['title']}'", inline=False)
+                        else:
+                            embed.add_field(name=f"#{len(self.music_queue) + 1}", value=f"'{song['title']}'", inline=False)
+                    elif i == 5:
+                        embed.add_field(name="...", value="There are more songs, but I'm not going to show them all :see_no_evil:", inline=False)
 
-                    embed.description = "Added to the queue"
-                    
                     # Set the thumbnail, assuming the song dictionary has a 'thumbnail' key
                     embed.set_thumbnail(url=song['thumbnail'])
 
@@ -234,13 +232,11 @@ class music_cog(commands.Cog):
                     if not self.is_playing:
                         await self.play_music(ctx)
 
-                    if i < 5:
-                        await ctx.send(embed=embed)
-                    elif i == 5:
-                        embeds.append(discord.Embed(color=discord.Color.red(), title="There are more songs, but I'm not going to show them all :sweat_smile:"))
-
-                # Delete the original message
+                # Delete the message that triggered the command
                 await ctx.message.delete()
+                
+                # Send the embed
+                await ctx.send(embed=embed)
 
     @commands.command(name="pause", help="Pauses the current song being played")
     async def pause(self, ctx, *args):
