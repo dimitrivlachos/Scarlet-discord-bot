@@ -46,7 +46,7 @@ async def get_weather(city, retries=3):
     wind_mph = metres_per_sec_to_mph(wind)
 
     # Format weather message
-    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C / {temp_fahrenheit}°F, with winds of {wind_kmh} km/h / {wind_mph} mph'
+    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C ({temp_fahrenheit}°F), with winds of {wind_kmh} km/h ({wind_mph} mph)'
     logger.info(f"Weather received: {weather}")
 
     return weather
