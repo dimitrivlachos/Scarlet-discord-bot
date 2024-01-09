@@ -286,7 +286,7 @@ class music_cog(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(name="clear", aliases=["c", "bin"], help="Stops the music and clears the queue")
+    @commands.command(name="clear", aliases=["c", "bin", "empty"], help="Stops the music and clears the queue")
     async def clear(self, ctx):
         logger.info("Clear called")
         if self.vc != None and self.is_playing:
