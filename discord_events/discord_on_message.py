@@ -61,7 +61,10 @@ async def parse_nlp_task(bot, message, confidence_threshold=0.8):
         return
 
     # Create a WitNlp object
-    nlp = wit_api.WitNlp(msg)
+    nlp = wit_api.WitNlp()
+    # Load the message into the WitNlp object
+    await nlp.load(msg)
+    
     logger.info(f"Checked message from <{message.author}>: {nlp}")
    
     # Check if the message is a command for the bot
