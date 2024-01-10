@@ -25,49 +25,31 @@ class music_cog(commands.Cog):
         self.vc = None
         self.ytdl = YoutubeDL(self.YDL_OPTIONS)
 
+    # Extracts relevant info from a YouTube URL using regex.
     def parse_url(self, url):
-        '''Extracts the relevant information from yotube the url using a regular expression
-        
-        Parameters:
-            url (str): The url to parse
-            
-            Returns:
-                urls (list): A list of urls
-        '''
-        logger.info(f"Parsing url: {url}")
+        logger.info(f"Parsing URL: {url}")
+        ids = self.extract_ids(url)
+        return ["https://www.youtube.com/watch?v=" + id for id in ids]
+    
+    # Helper method to extract video/playlist IDs from URLs.
+    def extract_ids(self, url):
+        patterns = {
+            "youtube.com/watch?": r"v=([0-9A-Za-z_-]+)",
+            "youtu.be/": r"youtu.be/([0-9A-Za-z_-]+)",
+            "youtube.com/playlist?": r"list=([0-9A-Za-z_-]+)"
+        }
 
-        ids = []
+        for key, pattern in patterns.items():
+            if key in url:
+                match = re.search(pattern, url)
+                if match:
+                    logger.info(f"Found URL: {match.group(1)}")
+                    if key == "youtube.com/playlist?":
+                        return self.get_playlist_urls(match.group(1))
+                    return [match.group(1)]
 
-        # Check if the url is a youtube url
-        if "youtube.com/watch?" in url:
-            exp = r"v=([0-9A-Za-z_-]+)"
-            match = re.search(exp, url)
-            if match:
-                logger.info(f"Found url: {match.group(1)}")
-                ids.append(match.group(1))
-        
-        # Check if the url is a youtube video url
-        elif "youtu.be/" in url:
-            exp = r"youtu.be/([0-9A-Za-z_-]+)"
-            match = re.search(exp, url)
-            if match:
-                logger.info(f"Found url: {match.group(1)}")
-                ids.append(match.group(1))
-
-        # Check if the url is a youtube playlist url
-        elif "youtube.com/playlist?" in url:
-            exp = r"list=([0-9A-Za-z_-]+)"
-            match = re.search(exp, url)
-            if match:
-                logger.info(f"Found playlist: {match.group(1)}")
-                ids = self.get_playlist_urls(match.group(1))
-
-        # Add youtube.com to the start of each url
-        for i in range(0, len(ids)):
-            # Check if the url already has youtube.com in it
-            ids[i] = "https://www.youtube.com/watch?v=" + ids[i]
-
-        return ids
+        logger.warning(f"No valid YouTube URL found in: {url}")
+        return []
     
     def get_playlist_urls(self, playlist_id):
         '''Gets the urls from a youtube playlist
