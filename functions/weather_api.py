@@ -1,4 +1,4 @@
-import requests
+import aiohttp
 from functions.unit_conversion import *
 from utility.tokens import WEATHER_API_KEY
 from utility.logger import logger
@@ -10,43 +10,37 @@ async def get_weather(city, retries=3):
     # Get weather from API
     url = f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}'
 
-    # Make request
-    for i in range(retries):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            break
-        except requests.exceptions.Timeout:
-            logger.warning(f"Request timed out, retrying ({i+1}/{retries})")
-            continue
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request error: {e}")
-            return None
-    
-    # Check if city was found
-    # Not sure if this is necessary anymore after the above checking was added
-    if response.status_code == 404:
-        logger.warning(f"Couldn't find city: {city}")
-        return None
+    # Create an aiohttp session
+    async with aiohttp.ClientSession() as session:
+        for i in range(retries):
+            try:
+                async with session.get(url) as response:
+                    # Raise an exception for HTTP error statuses
+                    response.raise_for_status()
 
-    # Convert response to JSON
-    weather_data = response.json()
+                    # Convert response to JSON
+                    weather_data = await response.json()
 
-    # Get weather description
-    weather_desc = weather_data['weather'][0]['description']
+                    # Process the data (same as before)
+                    weather_desc = weather_data['weather'][0]['description']
+                    temp = weather_data['main']['temp']
+                    temp_celsius = kelvin_to_celsius(temp)
+                    temp_fahrenheit = kelvin_to_fahrenheit(temp)
+                    wind = weather_data['wind']['speed']
+                    wind_kmh = metres_per_sec_to_kmh(wind)
+                    wind_mph = metres_per_sec_to_mph(wind)
 
-    # Get temperature in Celsius
-    temp = weather_data['main']['temp']
-    temp_celsius = kelvin_to_celsius(temp)
-    temp_fahrenheit = kelvin_to_fahrenheit(temp)
+                    # Format weather message
+                    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C ({temp_fahrenheit}°F), with winds of {wind_kmh} km/h ({wind_mph} mph)'
+                    logger.info(f"Weather received: {weather}")
 
-    # Get wind speed in km/h
-    wind = weather_data['wind']['speed']
-    wind_kmh = metres_per_sec_to_kmh(wind)
-    wind_mph = metres_per_sec_to_mph(wind)
-
-    # Format weather message
-    weather = f'The weather in {city.title()} is: {weather_desc}, {temp_celsius}°C ({temp_fahrenheit}°F), with winds of {wind_kmh} km/h ({wind_mph} mph)'
-    logger.info(f"Weather received: {weather}")
-
-    return weather
+                    return weather
+            except aiohttp.ClientError as e:
+                if i < retries - 1:
+                    logger.warning(f"Request failed, retrying ({i+1}/{retries})")
+                    continue
+                else:
+                    logger.error(f"Request error: {e}")
+                    return None
+                
+        logger.warning(f"Request failed after {retries} retries")
