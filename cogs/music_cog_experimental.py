@@ -341,3 +341,72 @@ class music_cog(commands.Cog):
         else:
             logger.warning("No new songs added")
             await send_message(ctx.channel, "I couldn't find that song :sob:")
+
+    @commands.command(name="pause", help="Pauses the current song being played")
+    async def pause(self, ctx, *args):
+        logger.info("Pause called")
+        if self.is_playing:
+            self.is_playing = False
+            self.is_paused = True
+            self.vc.pause()
+        elif self.is_paused:
+            self.is_paused = False
+            self.is_playing = True
+            self.vc.resume()
+
+    @commands.command(name = "resume", aliases=["r"], help="Resumes playing with the discord bot")
+    async def resume(self, ctx, *args):
+        logger.info("Resume called")
+        if self.is_paused:
+            self.is_paused = False
+            self.is_playing = True
+            self.vc.resume()
+
+    @commands.command(name="skip", aliases=["s"], help="Skips the current song being played")
+    async def skip(self, ctx):
+        logger.info("Skip called")
+        if self.vc != None and self.vc:
+            self.vc.stop()
+            #try to play next in the queue if it exists
+            await self.play_music(ctx)
+
+    @commands.command(name="queue", aliases=["q"], help="Displays the current songs in queue")
+    async def queue(self, ctx):
+        logger.info("Queue called")
+        if len(self.queue) == 0:
+            await send_message(ctx.channel, "No songs in queue")
+        else:
+            embed = self.create_embed("Queue", self.queue)
+            await ctx.channel.send(embed=embed)
+
+    @commands.command(name="clear", aliases=["c", "bin", "empty"], help="Stops the music and clears the queue")
+    async def clear(self, ctx):
+        logger.info("Clear called")
+        if self.vc != None and self.is_playing:
+            self.vc.stop()
+        self.music_queue = []
+        await send_message(ctx.channel, "Queue cleared")
+
+    @commands.command(name="stop", aliases=["disconnect", "l", "d", "dc"], help="Kick the bot from VC")
+    async def dc(self, ctx):
+        logger.info("Disconnect called")
+        self.is_playing = False
+        self.is_paused = False
+        await self.vc.disconnect()
+
+    @commands.command(name="remove", aliases=["rm"], help="Removes a song from the queue")
+    async def remove(self, ctx, *args):
+        logger.info("Remove called")
+        if len(args) == 0:
+            await send_message(ctx.channel, "You need to specify a song number to remove")
+            return
+        try:
+            index = int(args[0])
+        except ValueError:
+            await send_message(ctx.channel, "You need to specify a valid song number to remove")
+            return
+        if index < 1 or index > len(self.queue):
+            await send_message(ctx.channel, "You need to specify a valid song number to remove")
+            return
+        song = self.queue.pop(index - 1)
+        await send_message(ctx.channel, f"Removed song #{index}: {song.title}")
