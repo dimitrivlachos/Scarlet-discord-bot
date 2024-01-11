@@ -1,13 +1,12 @@
 import discord
 import asyncio
+import random
 import re
 from discord.ext import commands
 from yt_dlp import YoutubeDL
 from utility.logger import logger
 from utility.formatting import seconds_to_formatted_time
 from functions.send import send_message
-import random
-
 from concurrent.futures import ThreadPoolExecutor
 
 class song_data:
@@ -366,7 +365,7 @@ class music_cog(commands.Cog):
                 elif depth > 25:
                     depth = 25
                     await send_message(ctx.channel, "That's too many songs!")
-                    
+
                 if depth > len(self.queue):
                     await send_message(ctx.channel, "I can't show you more songs than there are in the queue :sweat_smile:")
                     depth = len(self.queue)
