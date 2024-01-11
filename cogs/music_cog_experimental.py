@@ -39,10 +39,69 @@ class music_cog(commands.Cog):
         self.vc = None
         self.ytdl = YoutubeDL(self.YDL_OPTIONS)
 
+        # Create a thread pool executor for multithreading
+        self.executor = ThreadPoolExecutor(max_workers=10)
+
     # # # # # # # # # # # # # # #
     #        Functions         
+    
+    def seconds_to_formatted_time(seconds):
+        """
+        Converts a given number of seconds into a formatted string showing either minutes or hours and minutes (if applicable).
 
-    def parse_url(self, url):
+        Parameters:
+        seconds (int): The number of seconds to convert.
+
+        Returns:
+        str: A formatted string representing the time in minutes or hours and minutes.
+        """
+
+        # Less than a minute
+        if seconds < 60:
+            return f"{seconds} seconds"
+
+        # Minutes only
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes} minutes"
+
+        # Hours and minutes
+        hours = minutes // 60
+        remaining_minutes = minutes % 60
+        if remaining_minutes == 0:
+            return f"{hours} hours"
+        else:
+            return f"{hours} hours and {remaining_minutes} minutes"
+
+    def create_embed(self, title, songs, colour=discord.Colour.red(), limit=5):
+        '''
+        Creates an embed for the songs
+
+        Parameters:
+            songs (list): A list of song_data objects
+
+        Returns:
+            embed (discord.Embed): The embed
+        '''
+        logger.info(f"Creating embed for \"{title}\"")
+        embed = discord.Embed(title=title, colour=colour)
+
+        for i, song in enumerate(songs, start=1): # Start at 1 to avoid 0th song
+            logger.info(f"Adding song to embed: {song.title}")
+            if i < limit:
+                #duration = self.seconds_to_formatted_time(song.duration)
+                embed.add_field(name=f"#{i}", value=f"{song.title} - {song.duration}", inline=False)
+                embed.set_thumbnail(url=song.thumbnail)
+            elif i == limit:
+                embed.add_field(name="And more!", value="I won't show you *all* of them here :see_no_evil:", inline=False)
+                break
+        
+        return embed
+    
+    # # # # # # # # # # # # # # #
+    #      Async functions
+
+    async def parse_url(self, url):
         '''
         Parses the URL and returns the video IDs
 
@@ -53,10 +112,12 @@ class music_cog(commands.Cog):
             urls (list): A list of video URLs
         '''
         logger.info(f"Parsing URL: {url}")
-        ids = self.extract_ids(url)
-        return ["https://www.youtube.com/watch?v=" + id for id in ids]
+        ids = await self.extract_ids(url)
+        urls = ["https://www.youtube.com/watch?v=" + id for id in ids]
+        print(f"URL list: {urls}")
+        return urls
     
-    def extract_ids(self, url):
+    async def extract_ids(self, url):
         '''
         Extracts the video IDs from the URL
 
@@ -78,15 +139,17 @@ class music_cog(commands.Cog):
                 if match:
                     logger.info(f"Found URL: {match.group(1)}")
                     if key == "youtube.com/playlist?":
-                        return self.get_playlist_urls(match.group(1))
+                        playlist_urls = await self.get_playlist_urls(match.group(1))
+                        playlist_ids = [id[0] for id in await asyncio.gather(*(self.extract_ids(url) for url in playlist_urls))]
+                        return playlist_ids
                     return [match.group(1)]
 
         logger.warning(f"No valid YouTube URL found in: {url}")
         return []
     
-    def get_playlist_urls(self, playlist_id):
+    async def get_playlist_urls(self, playlist_id):
         '''
-        Gets the URLs for the videos in the playlist
+        Gets the URLs for the videos in the playlist asynchronously
 
         Parameters:
             playlist_id (str): The playlist ID
@@ -96,37 +159,13 @@ class music_cog(commands.Cog):
         '''
         logger.info(f"Getting playlist URLs for {playlist_id}")
         try:
-            playlist_info = self.ytdl.extract_info(f"https://www.youtube.com/playlist?list={playlist_id}", download=False)
+            loop = asyncio.get_event_loop()
+            # Run the blocking call in a separate thread
+            playlist_info = await loop.run_in_executor(self.executor, lambda: self.ytdl.extract_info(f"https://www.youtube.com/playlist?list={playlist_id}", download=False))
             return [video['webpage_url'] for video in playlist_info['entries'] if 'webpage_url' in video]
         except Exception as e:
             logger.error(f"Error getting playlist URLs: {e}")
             return []
-        
-    def search_yt(self, item):
-        '''
-        Searches YouTube for the item and returns the data
-
-        Parameters:
-            item (str): The item to search for
-
-        Returns:
-            song_list (list): A list of song_data objects
-        '''
-        logger.info(f"Searching YouTube for: {item}")
-        urls = self.parse_url(item)
-        song_list = []
-
-        for url in urls:
-            try:
-                info = self.ytdl.extract_info(url, download=False)
-                song = song_data(info['url'], info['title'], info['thumbnail'], info['duration'])
-                song_list.append(song)
-            except Exception as e:
-                logger.error(f"Error searching YouTube: {e}")
-
-        if not song_list:
-            logger.warning(f"No data found for item: {item}")
-        return song_list
     
     async def add_to_queue(self, item):
         '''
@@ -142,32 +181,6 @@ class music_cog(commands.Cog):
         songs = await self.search_yt_async(item)  # Await the asynchronous function
         self.queue.extend(songs)  # Extend the queue with the new songs
         return songs
-    
-    def create_embed(self, title, songs, colour=discord.Colour.red(), limit=5):
-        '''
-        Creates an embed for the songs
-
-        Parameters:
-            songs (list): A list of song_data objects
-
-        Returns:
-            embed (discord.Embed): The embed
-        '''
-
-        embed = discord.Embed(title=title, colour=colour)
-
-        for i, song in enumerate(songs, start=1): # Start at 1 to avoid 0th song
-            if i < limit:
-                embed.add_field(name=f"#{i}", value=f"{song.title} - {song.duration}", inline=False)
-                embed.set_thumbnail(url=song.thumbnail)
-            elif i == limit:
-                embed.add_field(name="And more!", value="I won't show you *all* of them here :see_no_evil:", inline=False)
-                break
-        
-        return embed
-    
-    # # # # # # # # # # # # # # #
-    #      Async functions
 
     async def search_yt_async(self, item):
         '''
@@ -180,11 +193,13 @@ class music_cog(commands.Cog):
             song_list (list): A list of song_data objects
         '''
         logger.info(f"Searching YouTube for: {item}")
-        urls = self.parse_url(item)
+        urls = await self.parse_url(item)
         song_list = []
         loop = asyncio.get_event_loop()
 
-        with ThreadPoolExecutor() as executor:
+        # Run the blocking call in a separate thread
+        logger.info("Running blocking call in separate thread", extra={'colour': "\033[0;35m", 'bold': True})
+        with self.executor as executor:
             futures = []
             for url in urls:
                 # Schedule the synchronous function to run in a separate thread
@@ -213,7 +228,7 @@ class music_cog(commands.Cog):
             if len(self.queue) > 0:
                 # Get the next song in the queue
                 song = self.queue.pop(0)
-                logger.info(f"Playing song: {song.title} from {song.source}")
+                logger.info(f"Playing song: {song.title}")
 
                 # Play the song
                 self.vc.play(discord.FFmpegPCMAudio(song.source, **self.FFMPEG_OPTIONS), after=lambda e: asyncio.run_coroutine_threadsafe(self.play_next(), self.bot.loop))
@@ -303,7 +318,7 @@ class music_cog(commands.Cog):
         # Check if the query is a playlist and inform the user
         if "playlist" in query:
             logger.info("Playlist detected")
-            download_notification = send_message(ctx.channel, "Downloading playlist... :hourglass_flowing_sand: This could take a while!")
+            download_notification = await send_message(ctx.channel, "Downloading playlist... :hourglass_flowing_sand: This could take a while!", max_wait_time=0.5)
         
         # Add the song to the queue
         new_songs = await self.add_to_queue(query)
@@ -321,8 +336,8 @@ class music_cog(commands.Cog):
             if not self.is_playing:
                 logger.info("Starting playback")
                 await self.play_next()
+            # Delete the command message
+            await ctx.message.delete()
         else:
             logger.warning("No new songs added")
             await send_message(ctx.channel, "I couldn't find that song :sob:")
-
-        
