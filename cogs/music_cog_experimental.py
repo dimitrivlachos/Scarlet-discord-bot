@@ -128,9 +128,9 @@ class music_cog(commands.Cog):
             logger.warning(f"No data found for item: {item}")
         return song_list
     
-    def add_to_queue(self, item):
+    async def add_to_queue(self, item):
         '''
-        Adds the item to the queue
+        Adds the item to the queue asynchronously
 
         Parameters:
             item (str): The item to add
@@ -139,9 +139,8 @@ class music_cog(commands.Cog):
             songs (list): A list of song_data objects
         '''
         logger.info(f"Adding to queue: {item}")
-        songs = self.search_yt(item)
-        self.queue.extend(songs) # Extend the queue with the new songs
-
+        songs = await self.search_yt_async(item)  # Await the asynchronous function
+        self.queue.extend(songs)  # Extend the queue with the new songs
         return songs
     
     def create_embed(self, title, songs, colour=discord.Colour.red(), limit=5):
@@ -195,7 +194,7 @@ class music_cog(commands.Cog):
             for future in asyncio.as_completed(futures):
                 try:
                     info = await future
-                    song = song_data(info['formats'][0]['url'], info['title'], info['thumbnail'], info['duration'])
+                    song = song_data(info['url'], info['title'], info['thumbnail'], info['duration'])
                     song_list.append(song)
                 except Exception as e:
                     logger.error(f"Error searching YouTube: {e}")
@@ -307,7 +306,7 @@ class music_cog(commands.Cog):
             download_notification = send_message(ctx.channel, "Downloading playlist... :hourglass_flowing_sand: This could take a while!")
         
         # Add the song to the queue
-        new_songs = self.add_to_queue(query)
+        new_songs = await self.add_to_queue(query)
 
         # Wait for the download notification to finish
         if "download_notification" in locals():
