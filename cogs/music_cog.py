@@ -428,4 +428,4 @@ class music_cog(commands.Cog):
     async def shuffle(self, ctx):
         logger.info("Shuffle called")
         random.shuffle(self.queue)
-        await send_message(ctx.channel, "Queue shuffled!")
+        await send_message(ctx.channel, "Queue shuffled! :game_die:")
