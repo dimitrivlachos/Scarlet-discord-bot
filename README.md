@@ -16,13 +16,16 @@ You can use the text_to_bin.py file in /utility to convert your tokens and api k
 * Responds to dice rolls
 
 ## Commands
+* !join - Joins the voice channel you are in
 * !help - Displays a list of commands
-* !play <youtube url> - Plays a youtube video in the voice channel you are in
-* !add <youtube url> - Adds a youtube video to the queue
+* !play <youtube url> - Plays / adds a song to the queue
+* !add <youtube url> - Plays / adds a song to the queue
 * !pause - Pauses / Resumes the current song
 * !resume - Resumes the current song
 * !skip - Skips the current song
-* !queue - Displays the current queue
+* !queue <depth> - Displays the queue (depth argument optional)
 * !clear - Clears the current queue
-* !stop - Stops the current song and leaves the voice channel
-* !remove - Removes the last song added to the queue
+* !stop - Stops the current song, clears the queue and leaves the voice channel
+* !remove <index> - Removes the specified song from the queue
+* !move <index> <new index> - Moves the specified song to the new index position
+* !shuffle - Shuffles the queue

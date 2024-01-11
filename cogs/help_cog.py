@@ -35,15 +35,18 @@ class help_cog(commands.Cog):
 
         # Music commands
         music_commands = f"""
+        {self.bot.command_prefix}join - Joins the voice channel you are in
         {self.bot.command_prefix}play [query] - Plays / adds a song to the queue
         {self.bot.command_prefix}add [query] - Plays / adds a song to the queue
         {self.bot.command_prefix}pause - Pauses / Resumes the current song
         {self.bot.command_prefix}resume - Resumes the current song
         {self.bot.command_prefix}skip - Skips the current song
-        {self.bot.command_prefix}queue - Displays the current queue
+        {self.bot.command_prefix}queue [depth] - Displays the queue (depth optional)
         {self.bot.command_prefix}clear - Clears the current queue
-        {self.bot.command_prefix}stop - Stops the current song and clears the queue
-        {self.bot.command_prefix}remove - Removes the last song from the queue
+        {self.bot.command_prefix}stop - Stops the current song, clears the queue and leaves
+        {self.bot.command_prefix}remove [query] - Removes the last song from the queue
+        {self.bot.command_prefix}move [song] [position] - Moves a song to a new position in the queue
+        {self.bot.command_prefix}shuffle - Shuffles the queue
         """
         self.help_embed.add_field(name="Music commands", value=music_commands, inline=False)
 
