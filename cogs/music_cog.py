@@ -60,11 +60,11 @@ class music_cog(commands.Cog):
         logger.info(f"Creating embed for \"{title}\"")
         embed = discord.Embed(title=title, colour=colour)
 
-        for i, song in enumerate(songs, start=1): # Start at 1 to avoid 0th song
+        for i, song in enumerate(songs): # Start at 1 to avoid 0th song
             logger.info(f"Adding song to embed: {song.title}")
             if i < limit:
                 duration = seconds_to_formatted_time(song.duration)
-                embed.add_field(name=f"#{i}", value=f"{song.title} - {duration}", inline=False)
+                embed.add_field(name=f"#{i+1}", value=f"{song.title} - {duration}", inline=False)
                 embed.set_thumbnail(url=song.thumbnail)
             elif i == limit:
                 embed.add_field(name="And more!", value="I won't show you *all* of them here :see_no_evil:", inline=False)
@@ -345,12 +345,34 @@ class music_cog(commands.Cog):
             await self.play_music(ctx)
 
     @commands.command(name="queue", aliases=["q"], help="Displays the current songs in queue")
-    async def queue(self, ctx):
+    async def queue(self, ctx, *args):
         logger.info("Queue called")
+        query = " ".join(args)
+
         if len(self.queue) == 0:
             await send_message(ctx.channel, "No songs in queue")
         else:
-            embed = self.create_embed("Queue", self.queue)
+            if query == "": # If no depth specified, use default
+                embed = self.create_embed("Queue", self.queue)
+            else: # Otherwise, use the specified depth
+                try:
+                    depth = int(query)
+                except ValueError:
+                    await send_message(ctx.channel, "You need to use a number to specify the depth :see_no_evil:")
+                    return
+                if depth < 1:
+                    await send_message(ctx.channel, "I can't show you less than 1 song :sweat_smile:")
+                    return
+                elif depth > 25:
+                    depth = 25
+                    await send_message(ctx.channel, "That's too many songs!")
+                    
+                if depth > len(self.queue):
+                    await send_message(ctx.channel, "I can't show you more songs than there are in the queue :sweat_smile:")
+                    depth = len(self.queue)
+
+                embed = self.create_embed("Queue", self.queue, limit=depth)
+            
             await ctx.channel.send(embed=embed)
 
     @commands.command(name="clear", aliases=["c", "bin", "empty"], help="Stops the music and clears the queue")
