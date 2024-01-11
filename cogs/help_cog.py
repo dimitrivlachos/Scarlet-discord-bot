@@ -43,7 +43,7 @@ class help_cog(commands.Cog):
         {self.bot.command_prefix}skip - Skips the current song
         {self.bot.command_prefix}queue [depth] - Displays the queue (depth optional)
         {self.bot.command_prefix}clear - Clears the current queue
-        {self.bot.command_prefix}stop - Stops the current song and clears the queue
+        {self.bot.command_prefix}stop - Stops the current song, clears the queue and leaves
         {self.bot.command_prefix}remove [query] - Removes the last song from the queue
         {self.bot.command_prefix}move [song] [position] - Moves a song to a new position in the queue
         {self.bot.command_prefix}shuffle - Shuffles the queue
