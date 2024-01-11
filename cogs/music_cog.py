@@ -172,20 +172,19 @@ class music_cog(commands.Cog):
 
         # Run the blocking call in a separate thread
         logger.info("Running blocking call in separate thread", extra={'colour': "\033[0;35m", 'bold': True})
-        with self.executor as executor:
-            futures = []
-            for url in urls:
-                # Schedule the synchronous function to run in a separate thread
-                future = loop.run_in_executor(executor, self.ytdl.extract_info, url, False)
-                futures.append(future)
+        futures = []
+        for url in urls:
+            # Schedule the synchronous function to run in a separate thread
+            future = loop.run_in_executor(self.executor, self.ytdl.extract_info, url, False)
+            futures.append(future)
 
-            for future in asyncio.as_completed(futures):
-                try:
-                    info = await future
-                    song = song_data(info['url'], info['title'], info['thumbnail'], info['duration'])
-                    song_list.append(song)
-                except Exception as e:
-                    logger.error(f"Error searching YouTube: {e}")
+        for future in asyncio.as_completed(futures):
+            try:
+                info = await future
+                song = song_data(info['url'], info['title'], info['thumbnail'], info['duration'])
+                song_list.append(song)
+            except Exception as e:
+                logger.error(f"Error searching YouTube: {e}")
 
         if not song_list:
             logger.warning(f"No data found for item: {item}")
