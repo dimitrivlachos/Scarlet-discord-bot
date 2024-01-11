@@ -382,13 +382,13 @@ class music_cog(commands.Cog):
             await send_message(ctx.channel, "You need to specify a valid song number to remove")
             return
         song = self.queue.pop(index - 1)
-        await send_message(ctx.channel, f"Removed song #{index}: {song.title}")
+        await send_message(ctx.channel, f"Removed song #{index}: {song.title} :speak_no_evil:")
 
     @commands.command(name="move", aliases=["mv"], help="Moves a song in the queue")
     async def move(self, ctx, *args):
         logger.info("Move called")
         if len(args) < 2:
-            await send_message(ctx.channel, "You need to specify a song number to move and a new position")
+            await send_message(ctx.channel, "You need to specify a song number to move and a new position like ```!move 1 3```")
             return
         try:
             index = int(args[0])
@@ -401,10 +401,10 @@ class music_cog(commands.Cog):
             return
         song = self.queue.pop(index - 1)
         self.queue.insert(new_index - 1, song)
-        await send_message(ctx.channel, f"Moved song #{index} to position #{new_index}")
+        await send_message(ctx.channel, f"Moved song #{index} to position #{new_index} :blush:")
 
     @commands.command(name="shuffle", aliases=["sh"], help="Shuffles the queue")
     async def shuffle(self, ctx):
         logger.info("Shuffle called")
         random.shuffle(self.queue)
-        await send_message(ctx.channel, "Queue shuffled")
+        await send_message(ctx.channel, "Queue shuffled!")
