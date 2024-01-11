@@ -364,7 +364,7 @@ class music_cog(commands.Cog):
     @commands.command(name="stop", aliases=["disconnect", "l", "d", "dc"], help="Kick the bot from VC")
     async def dc(self, ctx):
         logger.info("Disconnecting called")
-        self.pause(ctx)
+        self.clear(ctx)
         await self.vc.disconnect()
 
     @commands.command(name="remove", aliases=["rm"], help="Removes a song from the queue")
