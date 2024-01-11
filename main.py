@@ -27,12 +27,12 @@ async def on_message(message):
     logger.info(f"Message from <{message.author}>: {message.content}")
 
     # Check if the message is a command (starts with the prefix)
-    if message.content.startswith(prefix):
-        # Process the command
-        await bot.process_commands(message)
-    else:
+    if not message.content.startswith(prefix):
         # Handle non-command messages
         await discord_on_message.on_message(bot, message)
+    else:
+        # Process the command
+        await bot.process_commands(message)
 
 @bot.event
 async def on_message_edit(before, after):
