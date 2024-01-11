@@ -4,7 +4,9 @@ import re
 from discord.ext import commands
 from yt_dlp import YoutubeDL
 from utility.logger import logger
+from utility.formatting import seconds_to_formatted_time
 from functions.send import send_message
+import random
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -44,34 +46,6 @@ class music_cog(commands.Cog):
 
     # # # # # # # # # # # # # # #
     #        Functions         
-    
-    def seconds_to_formatted_time(seconds):
-        """
-        Converts a given number of seconds into a formatted string showing either minutes or hours and minutes (if applicable).
-
-        Parameters:
-        seconds (int): The number of seconds to convert.
-
-        Returns:
-        str: A formatted string representing the time in minutes or hours and minutes.
-        """
-
-        # Less than a minute
-        if seconds < 60:
-            return f"{seconds} seconds"
-
-        # Minutes only
-        minutes = seconds // 60
-        if minutes < 60:
-            return f"{minutes} minutes"
-
-        # Hours and minutes
-        hours = minutes // 60
-        remaining_minutes = minutes % 60
-        if remaining_minutes == 0:
-            return f"{hours} hours"
-        else:
-            return f"{hours} hours and {remaining_minutes} minutes"
 
     def create_embed(self, title, songs, colour=discord.Colour.red(), limit=5):
         '''
@@ -89,8 +63,8 @@ class music_cog(commands.Cog):
         for i, song in enumerate(songs, start=1): # Start at 1 to avoid 0th song
             logger.info(f"Adding song to embed: {song.title}")
             if i < limit:
-                #duration = self.seconds_to_formatted_time(song.duration)
-                embed.add_field(name=f"#{i}", value=f"{song.title} - {song.duration}", inline=False)
+                duration = seconds_to_formatted_time(song.duration)
+                embed.add_field(name=f"#{i}", value=f"{song.title} - {duration}", inline=False)
                 embed.set_thumbnail(url=song.thumbnail)
             elif i == limit:
                 embed.add_field(name="And more!", value="I won't show you *all* of them here :see_no_evil:", inline=False)
@@ -384,14 +358,13 @@ class music_cog(commands.Cog):
         logger.info("Clear called")
         if self.vc != None and self.is_playing:
             self.vc.stop()
-        self.music_queue = []
+        self.queue = []
         await send_message(ctx.channel, "Queue cleared")
 
     @commands.command(name="stop", aliases=["disconnect", "l", "d", "dc"], help="Kick the bot from VC")
     async def dc(self, ctx):
-        logger.info("Disconnect called")
-        self.is_playing = False
-        self.is_paused = False
+        logger.info("Disconnecting called")
+        self.pause(ctx)
         await self.vc.disconnect()
 
     @commands.command(name="remove", aliases=["rm"], help="Removes a song from the queue")
@@ -410,3 +383,28 @@ class music_cog(commands.Cog):
             return
         song = self.queue.pop(index - 1)
         await send_message(ctx.channel, f"Removed song #{index}: {song.title}")
+
+    @commands.command(name="move", aliases=["mv"], help="Moves a song in the queue")
+    async def move(self, ctx, *args):
+        logger.info("Move called")
+        if len(args) < 2:
+            await send_message(ctx.channel, "You need to specify a song number to move and a new position")
+            return
+        try:
+            index = int(args[0])
+            new_index = int(args[1])
+        except ValueError:
+            await send_message(ctx.channel, "You need to specify valid song numbers to move")
+            return
+        if index < 1 or index > len(self.queue) or new_index < 1 or new_index > len(self.queue):
+            await send_message(ctx.channel, "You need to specify valid song numbers to move")
+            return
+        song = self.queue.pop(index - 1)
+        self.queue.insert(new_index - 1, song)
+        await send_message(ctx.channel, f"Moved song #{index} to position #{new_index}")
+
+    @commands.command(name="shuffle", aliases=["sh"], help="Shuffles the queue")
+    async def shuffle(self, ctx):
+        logger.info("Shuffle called")
+        random.shuffle(self.queue)
+        await send_message(ctx.channel, "Queue shuffled")
